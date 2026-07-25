@@ -97,6 +97,12 @@ const OrderManagement = () => {
     return badges[status] || 'badge-info';
   };
 
+  const formatAmount = (amt) => {
+    const n = typeof amt === 'number' ? amt : parseFloat(amt);
+    if (Number.isNaN(n) || n === null || n === undefined) return '0.00';
+    return n.toFixed(2);
+  };
+
   if (loading) return <div className="flex-center" style={{ height: '400px' }}>Loading...</div>;
 
   return (
@@ -142,7 +148,7 @@ const OrderManagement = () => {
             {orders.map((order) => (
               <tr key={order.id}>
                 <td><strong>{order.orderNumber}</strong></td>
-                <td>${order.totalAmount?.toFixed(2)}</td>
+                <td>${formatAmount(order.totalAmount)}</td>
                 <td>{order.orderType?.replace('_', ' ')}</td>
                 <td>
                   <select
@@ -225,7 +231,7 @@ const OrderManagement = () => {
             <h2>Order Details</h2>
             <div style={{ marginTop: '1rem' }}>
               <p><strong>Order Number:</strong> {selectedOrder.orderNumber}</p>
-              <p><strong>Total Amount:</strong> ${selectedOrder.totalAmount?.toFixed(2)}</p>
+              <p><strong>Total Amount:</strong> ${formatAmount(selectedOrder.totalAmount)}</p>
               <p><strong>Status:</strong> {selectedOrder.status}</p>
               <p><strong>Payment Status:</strong> {selectedOrder.paymentStatus}</p>
               <p><strong>Payment Method:</strong> {selectedOrder.paymentMethod}</p>

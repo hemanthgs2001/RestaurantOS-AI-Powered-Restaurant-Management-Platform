@@ -75,6 +75,12 @@ const MenuManagement = () => {
     }
   };
 
+  const formatPrice = (p) => {
+    const n = typeof p === 'number' ? p : parseFloat(p);
+    if (Number.isNaN(n) || n === null || n === undefined) return '0.00';
+    return n.toFixed(2);
+  };
+
   if (loading) return <div className="flex-center" style={{ height: '400px' }}>Loading...</div>;
 
   return (
@@ -104,7 +110,7 @@ const MenuManagement = () => {
               <tr key={item.id}>
                 <td><strong>{item.name}</strong></td>
                 <td>{item.category || 'General'}</td>
-                <td>${item.price?.toFixed(2)}</td>
+                <td>${formatPrice(item.price)}</td>
                 <td>{item.preparationTime} min</td>
                 <td>{item.calories || '-'}</td>
                 <td>

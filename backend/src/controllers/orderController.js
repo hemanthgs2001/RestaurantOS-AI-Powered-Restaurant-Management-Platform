@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const { sequelize } = require('../config/database');
+const notificationService = require('../services/notificationService');
 
 // @desc    Get all orders
 // @route   GET /api/restaurant/orders
@@ -48,6 +49,16 @@ const createOrder = async (req, res) => {
     }
     
     const order = await Order.create(req.body);
+    const io = req.app.get('io');
+    if (io) {
+      notificationService.emitNotification(
+        io,
+        'order_received',
+        'New order received',
+        `Order ${order.orderNumber || order.id} was placed and is pending processing.`,
+        { orderId: order.id, status: order.status }
+      );
+    }
     res.status(201).json(order);
   } catch (error) {
     console.error('Create order error:', error);
@@ -99,12 +110,30 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Status is required' });
     }
     
-    const order = await Order.findByPk(req.params.id);
+        const order = await Order.findByPk(req.params.id);
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
     
+    const previousStatus = order.status;
     await order.update({ status });
+    const io = req.app.get('io');
+    if (io && previousStatus !== status) {
+      const titles = {
+        preparing: 'Order preparing',
+        ready: 'Order prepared',
+        completed: 'Order completed',
+      };
+      const title = titles[status] || `Order ${status}`;
+      const message = `Order ${order.orderNumber || order.id} status changed to ${status}.`;
+      notificationService.emitNotification(
+        io,
+        'order_status',
+        title,
+        message,
+        { orderId: order.id, status }
+      );
+    }
     res.status(200).json(order);
   } catch (error) {
     console.error('Update order status error:', error);

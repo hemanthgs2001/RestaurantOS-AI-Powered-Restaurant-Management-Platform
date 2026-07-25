@@ -66,6 +66,12 @@ const ProductManagement = () => {
     }
   };
 
+  const formatPrice = (p) => {
+    const n = typeof p === 'number' ? p : parseFloat(p);
+    if (Number.isNaN(n) || n === null || n === undefined) return '0.00';
+    return n.toFixed(2);
+  };
+
   if (loading) return <div className="flex-center" style={{ height: '400px' }}>Loading...</div>;
 
   return (
@@ -99,7 +105,7 @@ const ProductManagement = () => {
                 <td>{product.unit}</td>
                 <td>{product.quantity}</td>
                 <td>{product.reorderLevel}</td>
-                <td>${product.unitPrice?.toFixed(2)}</td>
+                <td>${formatPrice(product.unitPrice)}</td>
                 <td>
                   <span className={`badge ${product.quantity <= product.reorderLevel ? 'badge-danger' : 'badge-success'}`}>
                     {product.quantity <= product.reorderLevel ? 'Low Stock' : 'In Stock'}

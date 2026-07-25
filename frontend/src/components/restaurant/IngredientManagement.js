@@ -67,6 +67,12 @@ const IngredientManagement = () => {
     return quantity <= reorderLevel;
   };
 
+  const formatPrice = (p) => {
+    const n = typeof p === 'number' ? p : parseFloat(p);
+    if (Number.isNaN(n) || n === null || n === undefined) return '0.00';
+    return n.toFixed(2);
+  };
+
   if (loading) return <div className="flex-center" style={{ height: '400px' }}>Loading...</div>;
 
   return (
@@ -98,7 +104,7 @@ const IngredientManagement = () => {
                 <td>{ingredient.unit}</td>
                 <td>{ingredient.quantity}</td>
                 <td>{ingredient.reorderLevel}</td>
-                <td>${ingredient.unitPrice?.toFixed(2)}</td>
+                <td>${formatPrice(ingredient.unitPrice)}</td>
                 <td>
                   <span className={`badge ${isLowStock(ingredient.quantity, ingredient.reorderLevel) ? 'badge-danger' : 'badge-success'}`}>
                     {isLowStock(ingredient.quantity, ingredient.reorderLevel) ? 'Low Stock' : 'In Stock'}

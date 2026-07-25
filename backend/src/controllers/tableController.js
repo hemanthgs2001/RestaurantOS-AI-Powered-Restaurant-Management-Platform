@@ -1,5 +1,6 @@
 const Table = require('../models/Table');
 const { sequelize } = require('../config/database');
+const notificationService = require('../services/notificationService');
 
 // @desc    Get all tables
 // @route   GET /api/restaurant/tables
@@ -119,7 +120,26 @@ const updateTableStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Table not found' });
     }
     
+    const previousStatus = table.status;
     await table.update({ status });
+    const io = req.app.get('io');
+    if (io && previousStatus !== status) {
+      const title = status === 'reserved'
+        ? 'Table reserved'
+        : status === 'occupied'
+          ? 'Table occupied'
+          : status === 'available'
+            ? 'Table available'
+            : `Table ${status}`;
+      const message = `Table ${table.tableNumber} is now ${status}.`;
+      notificationService.emitNotification(
+        io,
+        'table_status',
+        title,
+        message,
+        { tableId: table.id, status }
+      );
+    }
     res.status(200).json(table);
   } catch (error) {
     console.error('Update table status error:', error);

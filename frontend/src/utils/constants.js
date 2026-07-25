@@ -67,11 +67,24 @@ export const ROLE_LABELS = {
 
 // Role Permissions
 export const ROLE_PERMISSIONS = {
+  // Owner and Manager: full access to everything in the sidebar
   [ROLES.OWNER]: ['*'],
-  [ROLES.MANAGER]: ['dashboard', 'tables', 'orders', 'menu', 'recipes', 'staff', 'expenses'],
-  [ROLES.CHEF]: ['orders', 'recipes', 'ingredients'],
-  [ROLES.WAITER]: ['orders', 'tables', 'menu'],
-  [ROLES.CASHIER]: ['orders', 'menu', 'tables', 'expenses'],
+  [ROLES.MANAGER]: ['*'],
+
+  // Chef: ingredients, menu, recipes, warehouses (for ingredient sourcing), products
+  [ROLES.CHEF]: ['ingredients', 'menu', 'recipes', 'warehouses', 'products'],
+
+  // Waiter: tables, orders, suppliers (to view supplier contact if needed)
+  [ROLES.WAITER]: ['tables', 'orders', 'suppliers'],
+
+  // Cashier: inventory + expenses + orders/tables and related records
+  [ROLES.CASHIER]: [
+    'warehouses', 'stock',
+    'expense_categories', 'expenses', 'supplier_invoices', 'monthly_expenses',
+    'tables', 'orders', 'menu', 'recipes', 'ingredients', 'suppliers'
+  ],
+
+  // Keep store manager permissions (if used elsewhere)
   [ROLES.STORE_MANAGER]: ['products', 'categories', 'warehouses', 'stock', 'suppliers'],
 };
 

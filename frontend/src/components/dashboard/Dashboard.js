@@ -25,9 +25,9 @@ const Dashboard = () => {
         getSalesOverview('month'),
         getMonthlyExpenses(new Date().getFullYear())
       ]);
-      setStats(statsRes.data);
-      setSalesData(salesRes.data);
-      setExpenseData(expenseRes.data);
+      setStats(statsRes.data?.data || statsRes.data || null);
+      setSalesData(salesRes.data?.data || salesRes.data || []);
+      setExpenseData(expenseRes.data?.data || expenseRes.data || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {

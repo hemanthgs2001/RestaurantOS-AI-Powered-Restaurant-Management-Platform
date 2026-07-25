@@ -29,31 +29,9 @@ const AIDashboard = () => {
       setRecommendations(recRes.data);
     } catch (error) {
       console.error('Error fetching AI data:', error);
-      const errorMessage = error.message || 'Failed to fetch AI data';
+      const errorMessage = error?.response?.data?.message || error.message || 'Failed to fetch AI data';
       setError(errorMessage);
       toast.error(errorMessage);
-      
-      // Set mock data for demo
-      setPredictions({
-        stockPredictions: [
-          { ingredient: "Tomatoes", currentStock: 50, predictedDemand: 45, daysUntilShortage: 5, recommendation: "Reorder within 3 days" },
-          { ingredient: "Cheese", currentStock: 20, predictedDemand: 30, daysUntilShortage: 2, recommendation: "Urgent: Reorder immediately" }
-        ],
-        shortageAlerts: 1,
-        menuPricing: [
-          { menuItem: "Margherita Pizza", currentPrice: 12.99, recommendedPrice: 14.99, reason: "Ingredient cost increased" }
-        ],
-        prepTime: "15 minutes"
-      });
-      setRecommendations({
-        stockReorder: [
-          { ingredient: "Tomatoes", quantity: 20 },
-          { ingredient: "Cheese", quantity: 30 }
-        ],
-        wasteReduction: [
-          { ingredient: "Lettuce", reduction: 15 }
-        ]
-      });
     } finally {
       setLoading(false);
     }

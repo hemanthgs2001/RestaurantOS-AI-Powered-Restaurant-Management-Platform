@@ -9,6 +9,18 @@ const InvoiceProcessing = () => {
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
+  const formatAmount = (v) => {
+    const n = typeof v === 'number' ? v : parseFloat(v);
+    if (Number.isNaN(n) || n === null || n === undefined) return '0.00';
+    return n.toFixed(2);
+  };
+
+  const formatSize = (bytes) => {
+    if (!bytes && bytes !== 0) return '0 KB';
+    const kb = bytes / 1024;
+    return kb < 1024 ? `${kb.toFixed(1)} KB` : `${(kb / 1024).toFixed(2)} MB`;
+  };
+
   const handleFileUpload = (e) => {
     const uploadedFiles = Array.from(e.target.files);
     setFiles([...files, ...uploadedFiles]);
@@ -109,7 +121,7 @@ const InvoiceProcessing = () => {
                   <FiFile />
                   <span>{file.name}</span>
                   <span style={{ fontSize: '0.8rem', color: '#6B7280' }}>
-                    ({(file.size / 1024).toFixed(1)} KB)
+                    ({formatSize(file.size)})
                   </span>
                 </div>
                 <button
@@ -161,7 +173,7 @@ const InvoiceProcessing = () => {
                     <td>{invoice.invoiceNumber}</td>
                     <td>{invoice.supplier}</td>
                     <td>{invoice.date}</td>
-                    <td>${invoice.totalAmount?.toFixed(2)}</td>
+                    <td>${formatAmount(invoice.totalAmount)}</td>
                     <td>
                       <span className="badge badge-success">
                         <FiCheck /> Processed
@@ -183,9 +195,9 @@ const InvoiceProcessing = () => {
                   <p><strong>Date:</strong> {selectedInvoice.date}</p>
                 </div>
                 <div>
-                  <p><strong>Subtotal:</strong> ${selectedInvoice.subtotal?.toFixed(2)}</p>
-                  <p><strong>Tax:</strong> ${selectedInvoice.tax?.toFixed(2)}</p>
-                  <p><strong>Total:</strong> ${selectedInvoice.totalAmount?.toFixed(2)}</p>
+                  <p><strong>Subtotal:</strong> ${formatAmount(selectedInvoice.subtotal)}</p>
+                  <p><strong>Tax:</strong> ${formatAmount(selectedInvoice.tax)}</p>
+                  <p><strong>Total:</strong> ${formatAmount(selectedInvoice.totalAmount)}</p>
                 </div>
               </div>
               {selectedInvoice.items && (
@@ -205,8 +217,8 @@ const InvoiceProcessing = () => {
                         <tr key={idx}>
                           <td>{item.description}</td>
                           <td>{item.quantity}</td>
-                          <td>${item.unitPrice?.toFixed(2)}</td>
-                          <td>${item.total?.toFixed(2)}</td>
+                          <td>${formatAmount(item.unitPrice)}</td>
+                          <td>${formatAmount(item.total)}</td>
                         </tr>
                       ))}
                     </tbody>

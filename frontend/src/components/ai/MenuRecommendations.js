@@ -21,48 +21,8 @@ const MenuRecommendations = () => {
       setRecommendations(response.data || []);
     } catch (error) {
       console.error('Failed to fetch menu recommendations:', error);
-      const errorMessage = error.message || 'Failed to fetch menu recommendations';
+      const errorMessage = error?.response?.data?.message || error.message || 'Failed to fetch menu recommendations';
       setError(errorMessage);
-      toast.error(errorMessage);
-      
-      // Set mock data for demo when API is not available
-      setRecommendations([
-        {
-          menuItem: "Margherita Pizza",
-          category: "Pizza",
-          currentPrice: 12.99,
-          recommendedPrice: 14.99,
-          reason: "Ingredient cost increased by 15%"
-        },
-        {
-          menuItem: "Caesar Salad",
-          category: "Salads",
-          currentPrice: 8.99,
-          recommendedPrice: 9.99,
-          reason: "High demand, slight price increase recommended"
-        },
-        {
-          menuItem: "Pasta Carbonara",
-          category: "Pasta",
-          currentPrice: 15.99,
-          recommendedPrice: 16.99,
-          reason: "Ingredient cost increased by 8%"
-        },
-        {
-          menuItem: "Garlic Bread",
-          category: "Appetizers",
-          currentPrice: 4.99,
-          recommendedPrice: 5.49,
-          reason: "High demand, slight price increase"
-        },
-        {
-          menuItem: "Tiramisu",
-          category: "Desserts",
-          currentPrice: 6.99,
-          recommendedPrice: 6.99,
-          reason: "Pricing is optimal"
-        }
-      ]);
     } finally {
       setLoading(false);
     }

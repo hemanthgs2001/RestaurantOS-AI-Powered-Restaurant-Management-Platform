@@ -21,41 +21,8 @@ const StockPredictions = () => {
       setPredictions(response.data || []);
     } catch (error) {
       console.error('Failed to fetch stock predictions:', error);
-      const errorMessage = error.message || 'Failed to fetch stock predictions';
+      const errorMessage = error?.response?.data?.message || error.message || 'Failed to fetch stock predictions';
       setError(errorMessage);
-      toast.error(errorMessage);
-      
-      // Set mock data for demo when API is not available
-      setPredictions([
-        {
-          ingredient: "Tomatoes",
-          currentStock: 50,
-          predictedDemand: 45,
-          daysUntilShortage: 5,
-          recommendation: "Reorder within 3 days"
-        },
-        {
-          ingredient: "Cheese",
-          currentStock: 20,
-          predictedDemand: 30,
-          daysUntilShortage: 2,
-          recommendation: "Urgent: Reorder immediately"
-        },
-        {
-          ingredient: "Onions",
-          currentStock: 30,
-          predictedDemand: 25,
-          daysUntilShortage: 7,
-          recommendation: "Reorder within 5 days"
-        },
-        {
-          ingredient: "Lettuce",
-          currentStock: 40,
-          predictedDemand: 35,
-          daysUntilShortage: 8,
-          recommendation: "Reorder within 6 days"
-        }
-      ]);
     } finally {
       setLoading(false);
     }

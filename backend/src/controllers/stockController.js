@@ -1,6 +1,7 @@
 const StockTransaction = require('../models/StockTranscation');
 const Product = require('../models/Product');
 const { sequelize } = require('../config/database');
+const notificationService = require('../services/notificationService');
 
 // @desc    Get all stock
 // @route   GET /api/inventory/stock
@@ -57,6 +58,25 @@ const stockIn = async (req, res) => {
     }, { transaction });
     
     await transaction.commit();
+    const io = req.app.get('io');
+    if (io) {
+      notificationService.emitNotification(
+        io,
+        'stock_in',
+        'Stock in recorded',
+        `${quantity} units of ${product.name} were added to inventory.`,
+        { productId: product.id, newQuantity }
+      );
+      if (newQuantity <= product.reorderLevel) {
+        notificationService.emitNotification(
+          io,
+          'low_stock',
+          'Low stock alert',
+          `${product.name} remains at low stock after replenishment.`,
+          { productId: product.id, quantity: newQuantity }
+        );
+      }
+    }
     res.status(200).json({ 
       success: true, 
       message: 'Stock in recorded successfully',
@@ -109,6 +129,25 @@ const stockOut = async (req, res) => {
     }, { transaction });
     
     await transaction.commit();
+    const io = req.app.get('io');
+    if (io) {
+      notificationService.emitNotification(
+        io,
+        'stock_out',
+        'Stock out recorded',
+        `${quantity} units of ${product.name} were removed from inventory.`,
+        { productId: product.id, newQuantity }
+      );
+      if (newQuantity <= product.reorderLevel) {
+        notificationService.emitNotification(
+          io,
+          'low_stock',
+          'Low stock alert',
+          `${product.name} is at or below reorder level. Please reorder soon.`,
+          { productId: product.id, quantity: newQuantity }
+        );
+      }
+    }
     res.status(200).json({ 
       success: true, 
       message: 'Stock out recorded successfully',
