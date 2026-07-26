@@ -29,7 +29,7 @@ const getDashboardStats = async (req, res) => {
 
     // Low Stock Items
     const lowStockItems = await Product.count({
-      where: sequelize.literal('quantity <= reorder_level'),
+      where: sequelize.literal('quantity <= "reorderLevel"'),
     });
 
     // Active Orders List
