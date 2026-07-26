@@ -1,4 +1,5 @@
 const { sequelize } = require('../config/database');
+const { Op } = require('sequelize');
 const Order = require('../models/Order');
 const Table = require('../models/Table');
 const Product = require('../models/Product');
@@ -17,7 +18,7 @@ const getDashboardStats = async (req, res) => {
 
     // Active Orders
     const activeOrders = await Order.count({
-      where: { status: ['pending', 'preparing', 'ready'] },
+      where: { status: { [Op.in]: ['pending', 'preparing', 'ready'] } },
     });
 
     // Table Occupancy
@@ -28,13 +29,19 @@ const getDashboardStats = async (req, res) => {
     const tableOccupancy = totalTables > 0 ? Math.round((occupiedTables / totalTables) * 100) : 0;
 
     // Low Stock Items
+    const lowStockFilter = sequelize.where(
+      sequelize.col('quantity'),
+      '<=',
+      sequelize.col('reorderLevel')
+    );
+
     const lowStockItems = await Product.count({
-      where: sequelize.literal('quantity <= "reorderLevel"'),
+      where: lowStockFilter,
     });
 
     // Active Orders List
     const activeOrdersList = await Order.findAll({
-      where: { status: ['pending', 'preparing', 'ready'] },
+      where: { status: { [Op.in]: ['pending', 'preparing', 'ready'] } },
       order: [['createdAt', 'DESC']],
       limit: 5,
       attributes: ['id', 'orderNumber', 'status', 'totalAmount'],
@@ -42,7 +49,7 @@ const getDashboardStats = async (req, res) => {
 
     // Low Stock Items List
     const lowStockItemsList = await Product.findAll({
-      where: sequelize.literal('quantity <= reorder_level'),
+      where: lowStockFilter,
       attributes: ['id', 'name', 'quantity', 'reorderLevel'],
       limit: 5,
     });
@@ -56,7 +63,7 @@ const getDashboardStats = async (req, res) => {
     // Purchase Summary
     const purchaseSummary = {
       totalOrders: await PurchaseOrder.count(),
-      totalAmount: await PurchaseOrder.sum('totalAmount'),
+      totalAmount: parseFloat(await PurchaseOrder.sum('totalAmount')) || 0,
       pendingOrders: await PurchaseOrder.count({ where: { status: 'sent' } }),
       completedOrders: await PurchaseOrder.count({ where: { status: 'received' } }),
     };
@@ -64,7 +71,7 @@ const getDashboardStats = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        totalRevenue: totalRevenue || 0,
+        totalRevenue: parseFloat(totalRevenue) || 0,
         activeOrders,
         tableOccupancy,
         lowStockItems: lowStockItems || 0,

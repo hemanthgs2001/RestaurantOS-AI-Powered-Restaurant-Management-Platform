@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatCurrency } from '../../utils/helpers';
 
 const MonthlyExpenses = ({ data }) => {
   if (!data) {
@@ -15,7 +16,7 @@ const MonthlyExpenses = ({ data }) => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip />
+            <Tooltip formatter={(value) => formatCurrency(value)} />
             <Bar dataKey="amount" fill="#EF4444" />
           </BarChart>
         </ResponsiveContainer>

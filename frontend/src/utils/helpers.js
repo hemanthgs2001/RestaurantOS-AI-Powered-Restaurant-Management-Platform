@@ -8,17 +8,16 @@ import { toast } from 'react-hot-toast';
 /**
  * Format currency value
  * @param {number} amount - The amount to format
- * @param {string} currency - Currency code (default: 'USD')
+ * @param {string} currency - Currency code (default: 'INR')
+ * @param {string} locale - Locale string for formatting (default: 'en-IN')
  * @returns {string} Formatted currency string
  */
-export const formatCurrency = (amount, currency = 'USD') => {
-  if (amount === null || amount === undefined) return '--';
-  
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+ export const formatCurrency = (amount, currency = 'INR', locale = 'en-IN') => {
+   if (amount === null || amount === undefined) return '--';
+   
+   return new Intl.NumberFormat(locale, {
+     style: 'currency',
+     currency,
   }).format(amount);
 };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { getExpenseRecords, createExpenseRecord, updateExpenseRecord, deleteExpenseRecord } from '../../api/expenseApi';
 import { getExpenseCategories } from '../../api/expenseApi';
+import { formatCurrency } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const ExpenseRecords = () => {
@@ -176,7 +177,7 @@ const ExpenseRecords = () => {
                 </select>
               </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label>Amount ($)</label>
+                <label>Amount (INR)</label>
                 <input
                   type="number"
                   step="0.01"

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiShoppingCart } from 'react-icons/fi';
+import { formatCurrency } from '../../utils/helpers';
 
 const PurchaseSummary = ({ data }) => {
   if (!data) {
@@ -18,7 +19,7 @@ const PurchaseSummary = ({ data }) => {
         </div>
         <div>
           <p style={{ color: '#6B7280', fontSize: '0.9rem' }}>Total Amount</p>
-          <h3>${data.totalAmount?.toLocaleString() || 0}</h3>
+          <h3>{formatCurrency(data.totalAmount || 0)}</h3>
         </div>
         <div>
           <p style={{ color: '#6B7280', fontSize: '0.9rem' }}>Pending Orders</p>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getMonthlyExpenses } from '../../api/expenseApi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { formatCurrency } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const MonthlyExpenseTracking = () => {
@@ -75,11 +76,11 @@ const MonthlyExpenseTracking = () => {
       <div className="grid-3" style={{ marginBottom: '2rem' }}>
         <div className="card">
           <h4 style={{ color: '#6B7280', marginBottom: '0.5rem' }}>Total Expenses</h4>
-          <h2 style={{ color: '#1F2937' }}>${getTotalExpenses().toFixed(2)}</h2>
+          <h2 style={{ color: '#1F2937' }}>{formatCurrency(getTotalExpenses())}</h2>
         </div>
         <div className="card">
           <h4 style={{ color: '#6B7280', marginBottom: '0.5rem' }}>Monthly Average</h4>
-          <h2 style={{ color: '#1F2937' }}>${getAverageExpense().toFixed(2)}</h2>
+          <h2 style={{ color: '#1F2937' }}>{formatCurrency(getAverageExpense())}</h2>
         </div>
         <div className="card">
           <h4 style={{ color: '#6B7280', marginBottom: '0.5rem' }}>Months Tracked</h4>
@@ -97,7 +98,7 @@ const MonthlyExpenseTracking = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+                <Tooltip formatter={(value) => formatCurrency(value)} />
                 <Legend />
                 <Bar dataKey="amount" fill="#4F46E5" name="Expenses" />
               </BarChart>
@@ -124,7 +125,7 @@ const MonthlyExpenseTracking = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>

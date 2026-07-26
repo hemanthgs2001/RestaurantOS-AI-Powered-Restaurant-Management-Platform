@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDashboardStats, getSalesOverview, getMonthlyExpenses } from '../../api/dashboardApi';
+import { formatCurrency } from '../../utils/helpers';
 import SalesOverview from './SalesOverview';
 import ActiveOrders from './ActiveOrders';
 import TableOccupancy from './TableOccupancy';
@@ -47,7 +48,7 @@ const Dashboard = () => {
       <div className="grid-4" style={{ marginBottom: '2rem' }}>
         <div className="card">
           <h4 style={{ color: '#6B7280', marginBottom: '0.5rem' }}>Total Revenue</h4>
-          <h2 style={{ color: '#1F2937' }}>${stats?.totalRevenue?.toLocaleString() || 0}</h2>
+          <h2 style={{ color: '#1F2937' }}>{formatCurrency(stats?.totalRevenue || 0)}</h2>
         </div>
         <div className="card">
           <h4 style={{ color: '#6B7280', marginBottom: '0.5rem' }}>Active Orders</h4>

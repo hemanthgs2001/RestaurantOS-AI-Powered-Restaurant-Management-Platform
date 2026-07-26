@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FiUpload, FiFile, FiDownload, FiTrash2, FiCheck } from 'react-icons/fi';
 import { processInvoice, getInvoices, generateExpenseRegister } from '../../api/aiApi';
+import { formatCurrency } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const InvoiceProcessing = () => {
@@ -11,8 +12,8 @@ const InvoiceProcessing = () => {
 
   const formatAmount = (v) => {
     const n = typeof v === 'number' ? v : parseFloat(v);
-    if (Number.isNaN(n) || n === null || n === undefined) return '0.00';
-    return n.toFixed(2);
+    if (Number.isNaN(n) || n === null || n === undefined) return 0;
+    return n;
   };
 
   const formatSize = (bytes) => {
@@ -173,7 +174,7 @@ const InvoiceProcessing = () => {
                     <td>{invoice.invoiceNumber}</td>
                     <td>{invoice.supplier}</td>
                     <td>{invoice.date}</td>
-                    <td>${formatAmount(invoice.totalAmount)}</td>
+                    <td>{formatCurrency(formatAmount(invoice.totalAmount))}</td>
                     <td>
                       <span className="badge badge-success">
                         <FiCheck /> Processed
@@ -195,9 +196,9 @@ const InvoiceProcessing = () => {
                   <p><strong>Date:</strong> {selectedInvoice.date}</p>
                 </div>
                 <div>
-                  <p><strong>Subtotal:</strong> ${formatAmount(selectedInvoice.subtotal)}</p>
-                  <p><strong>Tax:</strong> ${formatAmount(selectedInvoice.tax)}</p>
-                  <p><strong>Total:</strong> ${formatAmount(selectedInvoice.totalAmount)}</p>
+                  <p><strong>Subtotal:</strong> {formatCurrency(formatAmount(selectedInvoice.subtotal))}</p>
+                  <p><strong>Tax:</strong> {formatCurrency(formatAmount(selectedInvoice.tax))}</p>
+                  <p><strong>Total:</strong> {formatCurrency(formatAmount(selectedInvoice.totalAmount))}</p>
                 </div>
               </div>
               {selectedInvoice.items && (
@@ -217,8 +218,8 @@ const InvoiceProcessing = () => {
                         <tr key={idx}>
                           <td>{item.description}</td>
                           <td>{item.quantity}</td>
-                          <td>${formatAmount(item.unitPrice)}</td>
-                          <td>${formatAmount(item.total)}</td>
+                          <td>{formatCurrency(formatAmount(item.unitPrice))}</td>
+                          <td>{formatCurrency(formatAmount(item.total))}</td>
                         </tr>
                       ))}
                     </tbody>

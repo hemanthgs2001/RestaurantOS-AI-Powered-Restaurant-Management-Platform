@@ -1,5 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatCurrency } from '../../utils/helpers';
 
 const SalesOverview = ({ data }) => {
   if (!data) {
@@ -15,7 +16,7 @@ const SalesOverview = ({ data }) => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis />
-            <Tooltip />
+            <Tooltip formatter={(value, name) => [name === 'revenue' ? formatCurrency(value) : value, name]} />
             <Line type="monotone" dataKey="revenue" stroke="#4F46E5" strokeWidth={2} />
             <Line type="monotone" dataKey="orders" stroke="#10B981" strokeWidth={2} />
           </LineChart>
