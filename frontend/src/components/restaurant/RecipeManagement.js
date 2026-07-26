@@ -146,7 +146,6 @@ const RecipeManagement = () => {
             <div style={{ marginTop: '1rem' }}>
               <p><strong>Description:</strong> {selectedRecipe.description || 'No description'}</p>
               <p><strong>Prep Time:</strong> {selectedRecipe.prepTime || 0} minutes</p>
-              <p><strong>Cook Time:</strong> {selectedRecipe.cookTime || 0} minutes</p>
               <p><strong>Servings:</strong> {selectedRecipe.servings || 0}</p>
               <p><strong>Yield Quantity:</strong> {selectedRecipe.yieldQuantity || 0}</p>
               <div style={{ marginTop: '1rem' }}>
@@ -229,15 +228,6 @@ const RecipeManagement = () => {
                     className="input"
                     value={formData.prepTime}
                     onChange={(e) => setFormData({ ...formData, prepTime: parseInt(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label>Cook Time (min)</label>
-                  <input
-                    type="number"
-                    className="input"
-                    value={formData.cookTime}
-                    onChange={(e) => setFormData({ ...formData, cookTime: parseInt(e.target.value) })}
                   />
                 </div>
               </div>

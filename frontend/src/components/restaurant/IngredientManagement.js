@@ -3,6 +3,8 @@ import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { getIngredients, createIngredient, updateIngredient, deleteIngredient } from '../../api/restaurantApi';
 import toast from 'react-hot-toast';
 
+const UNIT_OPTIONS = ['kg', 'g', 'L', 'ml', 'pieces', 'dozen', 'pack', 'box'];
+
 const IngredientManagement = () => {
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,6 @@ const IngredientManagement = () => {
     name: '',
     unit: '',
     quantity: 0,
-    reorderLevel: 10,
     unitPrice: 0
   });
 
@@ -44,7 +45,7 @@ const IngredientManagement = () => {
       }
       setShowModal(false);
       setEditingIngredient(null);
-      setFormData({ name: '', unit: '', quantity: 0, reorderLevel: 10, unitPrice: 0 });
+      setFormData({ name: '', unit: '', quantity: 0, unitPrice: 0 });
       fetchIngredients();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Operation failed');
@@ -61,10 +62,6 @@ const IngredientManagement = () => {
         toast.error('Failed to delete ingredient');
       }
     }
-  };
-
-  const isLowStock = (quantity, reorderLevel) => {
-    return quantity <= reorderLevel;
   };
 
   const formatPrice = (p) => {
@@ -91,10 +88,7 @@ const IngredientManagement = () => {
               <th>Name</th>
               <th>Unit</th>
               <th>Quantity</th>
-              <th>Reorder Level</th>
               <th>Unit Price</th>
-              <th>Status</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -103,13 +97,7 @@ const IngredientManagement = () => {
                 <td><strong>{ingredient.name}</strong></td>
                 <td>{ingredient.unit}</td>
                 <td>{ingredient.quantity}</td>
-                <td>{ingredient.reorderLevel}</td>
-                <td>${formatPrice(ingredient.unitPrice)}</td>
-                <td>
-                  <span className={`badge ${isLowStock(ingredient.quantity, ingredient.reorderLevel) ? 'badge-danger' : 'badge-success'}`}>
-                    {isLowStock(ingredient.quantity, ingredient.reorderLevel) ? 'Low Stock' : 'In Stock'}
-                  </span>
-                </td>
+                <td>₹{formatPrice(ingredient.unitPrice)}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-secondary"
@@ -169,14 +157,19 @@ const IngredientManagement = () => {
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Unit</label>
-                <input
-                  type="text"
+                <select
                   className="input"
                   value={formData.unit}
                   onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                  placeholder="e.g., kg, g, L, ml, pieces"
                   required
-                />
+                >
+                  <option value="">Select Unit</option>
+                  {UNIT_OPTIONS.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {unit}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Quantity</label>
@@ -190,17 +183,7 @@ const IngredientManagement = () => {
                 />
               </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label>Reorder Level</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="input"
-                  value={formData.reorderLevel}
-                  onChange={(e) => setFormData({ ...formData, reorderLevel: parseFloat(e.target.value) })}
-                />
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label>Unit Price ($)</label>
+                <label>Unit Price (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -219,7 +202,7 @@ const IngredientManagement = () => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingIngredient(null);
-                    setFormData({ name: '', unit: '', quantity: 0, reorderLevel: 10, unitPrice: 0 });
+                    setFormData({ name: '', unit: '', quantity: 0, unitPrice: 0 });
                   }}
                 >
                   Cancel

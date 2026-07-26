@@ -1,6 +1,31 @@
+const { Op } = require('sequelize');
 const Order = require('../models/Order');
 const { sequelize } = require('../config/database');
 const notificationService = require('../services/notificationService');
+
+const VALID_STATUSES = ['accepted', 'cancelled'];
+
+// Generates the next sequential order number for "today" (since local
+// midnight), so numbering starts at 1 and resets every 24 hours.
+const generateOrderNumber = async () => {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const todaysOrders = await Order.findAll({
+    where: { createdAt: { [Op.gte]: startOfDay } },
+    attributes: ['orderNumber']
+  });
+
+  let maxNumber = 0;
+  todaysOrders.forEach((order) => {
+    const parsed = parseInt(order.orderNumber, 10);
+    if (!Number.isNaN(parsed) && parsed > maxNumber) {
+      maxNumber = parsed;
+    }
+  });
+
+  return String(maxNumber + 1);
+};
 
 // @desc    Get all orders
 // @route   GET /api/restaurant/orders
@@ -36,26 +61,28 @@ const getOrderById = async (req, res) => {
 // @desc    Create order
 // @route   POST /api/restaurant/orders
 // @access  Private
+// Body accepts an optional `tableNumber` (dine-in table the order belongs to).
+// `orderNumber` is auto-generated (1, 2, 3... resetting daily) unless explicitly provided.
 const createOrder = async (req, res) => {
   try {
-    // Generate order number if not provided
     if (!req.body.orderNumber) {
-      const date = new Date();
-      const year = date.getFullYear().toString().slice(-2);
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-      req.body.orderNumber = `ORD-${year}${month}${day}-${random}`;
+      req.body.orderNumber = await generateOrderNumber();
     }
-    
+
+    // Normalize tableNumber (allow blank string from forms to become null)
+    if (req.body.tableNumber === '' || req.body.tableNumber === undefined) {
+      req.body.tableNumber = null;
+    }
+
     const order = await Order.create(req.body);
     const io = req.app.get('io');
     if (io) {
+      const tableInfo = order.tableNumber ? ` (Table ${order.tableNumber})` : '';
       notificationService.emitNotification(
         io,
         'order_received',
         'New order received',
-        `Order ${order.orderNumber || order.id} was placed and is pending processing.`,
+        `Order #${order.orderNumber}${tableInfo} was placed and is pending processing.`,
         { orderId: order.id, status: order.status }
       );
     }
@@ -75,6 +102,11 @@ const updateOrder = async (req, res) => {
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
+
+    if (req.body.tableNumber === '') {
+      req.body.tableNumber = null;
+    }
+
     await order.update(req.body);
     res.status(200).json(order);
   } catch (error) {
@@ -103,29 +135,31 @@ const deleteOrder = async (req, res) => {
 // @desc    Update order status
 // @route   PATCH /api/restaurant/orders/:id/status
 // @access  Private
+// Status is limited to 'accepted' or 'cancelled'.
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     if (!status) {
       return res.status(400).json({ success: false, message: 'Status is required' });
     }
-    
-        const order = await Order.findByPk(req.params.id);
+    if (!VALID_STATUSES.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Status must be one of: ${VALID_STATUSES.join(', ')}`
+      });
+    }
+
+    const order = await Order.findByPk(req.params.id);
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
-    
+
     const previousStatus = order.status;
     await order.update({ status });
     const io = req.app.get('io');
     if (io && previousStatus !== status) {
-      const titles = {
-        preparing: 'Order preparing',
-        ready: 'Order prepared',
-        completed: 'Order completed',
-      };
-      const title = titles[status] || `Order ${status}`;
-      const message = `Order ${order.orderNumber || order.id} status changed to ${status}.`;
+      const title = status === 'accepted' ? 'Order accepted' : 'Order cancelled';
+      const message = `Order #${order.orderNumber} status changed to ${status}.`;
       notificationService.emitNotification(
         io,
         'order_status',
@@ -166,11 +200,7 @@ const getOrderStats = async (req, res) => {
     const [results] = await sequelize.query(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-        SUM(CASE WHEN status = 'preparing' THEN 1 ELSE 0 END) as preparing,
-        SUM(CASE WHEN status = 'ready' THEN 1 ELSE 0 END) as ready,
-        SUM(CASE WHEN status = 'served' THEN 1 ELSE 0 END) as served,
-        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted,
         SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
         SUM(totalAmount) as totalRevenue
       FROM "Orders"

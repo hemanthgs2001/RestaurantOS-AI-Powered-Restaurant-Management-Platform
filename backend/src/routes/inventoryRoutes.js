@@ -35,7 +35,7 @@ router.delete('/warehouses/:id', authorize('owner', 'manager'), warehouseControl
 router.get('/stock', stockController.getAllStock);
 router.post('/stock/in', authorize('owner', 'manager', 'store_manager'), stockController.stockIn);
 router.post('/stock/out', authorize('owner', 'manager', 'store_manager'), stockController.stockOut);
-router.get('/stock/transactions', stockController.getStockTransactions);
+router.get('/stock/transactions', stockController.getStockTranscations);
 
 // ==================== PURCHASE ORDER ROUTES ====================
 router.get('/purchase-orders', purchaseOrderController.getAllPurchaseOrders);

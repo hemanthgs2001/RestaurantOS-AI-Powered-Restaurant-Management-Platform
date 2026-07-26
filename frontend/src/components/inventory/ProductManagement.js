@@ -66,12 +66,6 @@ const ProductManagement = () => {
     }
   };
 
-  const formatPrice = (p) => {
-    const n = typeof p === 'number' ? p : parseFloat(p);
-    if (Number.isNaN(n) || n === null || n === undefined) return '0.00';
-    return n.toFixed(2);
-  };
-
   if (loading) return <div className="flex-center" style={{ height: '400px' }}>Loading...</div>;
 
   return (
@@ -87,12 +81,9 @@ const ProductManagement = () => {
         <table className="table">
           <thead>
             <tr>
-              <th>SKU</th>
               <th>Name</th>
               <th>Unit</th>
               <th>Quantity</th>
-              <th>Reorder Level</th>
-              <th>Unit Price</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -100,12 +91,9 @@ const ProductManagement = () => {
           <tbody>
             {products.map((product) => (
               <tr key={product.id}>
-                <td>{product.sku || '-'}</td>
                 <td><strong>{product.name}</strong></td>
                 <td>{product.unit}</td>
                 <td>{product.quantity}</td>
-                <td>{product.reorderLevel}</td>
-                <td>${formatPrice(product.unitPrice)}</td>
                 <td>
                   <span className={`badge ${product.quantity <= product.reorderLevel ? 'badge-danger' : 'badge-success'}`}>
                     {product.quantity <= product.reorderLevel ? 'Low Stock' : 'In Stock'}
@@ -180,24 +168,19 @@ const ProductManagement = () => {
                 />
               </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label>SKU</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={formData.sku}
-                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                />
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
                 <label>Unit</label>
-                <input
-                  type="text"
+                <select
                   className="input"
                   value={formData.unit}
                   onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                  placeholder="e.g., kg, L, pieces"
                   required
-                />
+                >
+                  <option value="">Select unit</option>
+                  <option value="kg">kg</option>
+                  <option value="g">g</option>
+                  <option value="l">l</option>
+                  <option value="pieces">pieces</option>
+                </select>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
@@ -208,28 +191,6 @@ const ProductManagement = () => {
                     className="input"
                     value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label>Reorder Level</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="input"
-                    value={formData.reorderLevel}
-                    onChange={(e) => setFormData({ ...formData, reorderLevel: parseFloat(e.target.value) })}
-                  />
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                <div>
-                  <label>Unit Price ($)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="input"
-                    value={formData.unitPrice}
-                    onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) })}
                   />
                 </div>
                 <div>

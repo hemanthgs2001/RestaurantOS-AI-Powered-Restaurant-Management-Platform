@@ -14,6 +14,11 @@ const getAllInvoices = async (req, res) => {
     
     const formatted = invoices.map(i => ({
       ...i.toJSON(),
+      // Sequelize returns DECIMAL columns as strings (e.g. "1500.00").
+      // Convert to numbers here so the frontend's .toFixed() calls don't crash.
+      totalAmount: parseFloat(i.totalAmount) || 0,
+      taxAmount: parseFloat(i.taxAmount) || 0,
+      discountAmount: parseFloat(i.discountAmount) || 0,
       supplierName: i.Supplier?.name || 'Unknown'
     }));
     
@@ -35,7 +40,14 @@ const getInvoiceById = async (req, res) => {
     if (!invoice) {
       return res.status(404).json({ success: false, message: 'Invoice not found' });
     }
-    res.status(200).json(invoice);
+    const formatted = {
+      ...invoice.toJSON(),
+      totalAmount: parseFloat(invoice.totalAmount) || 0,
+      taxAmount: parseFloat(invoice.taxAmount) || 0,
+      discountAmount: parseFloat(invoice.discountAmount) || 0,
+      supplierName: invoice.Supplier?.name || 'Unknown'
+    };
+    res.status(200).json(formatted);
   } catch (error) {
     console.error('Get supplier invoice error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch supplier invoice' });
@@ -151,8 +163,8 @@ const getInvoiceStats = async (req, res) => {
         SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
         SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue,
         SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
-        SUM(totalAmount) as totalAmount,
-        SUM(CASE WHEN status = 'pending' OR status = 'overdue' THEN totalAmount ELSE 0 END) as outstandingAmount
+        SUM("totalAmount") as "totalAmount",
+        SUM(CASE WHEN status = 'pending' OR status = 'overdue' THEN "totalAmount" ELSE 0 END) as "outstandingAmount"
       FROM "SupplierInvoices"
     `);
     res.status(200).json(results[0]);
@@ -172,7 +184,13 @@ const getInvoicesBySupplier = async (req, res) => {
       where: { supplierId },
       order: [['createdAt', 'DESC']]
     });
-    res.status(200).json(invoices);
+    const formatted = invoices.map(i => ({
+      ...i.toJSON(),
+      totalAmount: parseFloat(i.totalAmount) || 0,
+      taxAmount: parseFloat(i.taxAmount) || 0,
+      discountAmount: parseFloat(i.discountAmount) || 0
+    }));
+    res.status(200).json(formatted);
   } catch (error) {
     console.error('Get invoices by supplier error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch invoices' });

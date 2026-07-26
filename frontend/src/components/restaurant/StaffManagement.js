@@ -3,6 +3,24 @@ import { FiPlus, FiEdit2, FiTrash2, FiUser } from 'react-icons/fi';
 import { getStaff, createStaff, updateStaff, deleteStaff } from '../../api/restaurantApi';
 import toast from 'react-hot-toast';
 
+// ---- Dropdown option lists ----
+const ALL_POSITIONS = ['Chef', 'Waiter', 'Manager', 'Cashier'];
+const SHIFT_OPTIONS = ['Morning', 'Evening', 'Night', 'Flexible'];
+
+// Reads the logged-in user's role.
+// NOTE: This assumes the logged-in user object is stored in localStorage under the key 'user'
+// (e.g. localStorage.setItem('user', JSON.stringify({ name, email, role }))) at login time.
+// If your app stores the current user differently (AuthContext, Redux store, JWT decode, etc.),
+// replace the body of this function with the correct lookup.
+const getCurrentUserRole = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    return (user?.role || '').toLowerCase();
+  } catch {
+    return '';
+  }
+};
+
 const StaffManagement = () => {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +36,13 @@ const StaffManagement = () => {
     shift: '',
     isActive: true
   });
+
+  const isOwner = getCurrentUserRole() === 'owner';
+
+  // Only Owners can see/select "Manager" as a position. Everyone else gets the rest of the list.
+  const positionOptions = isOwner
+    ? ALL_POSITIONS
+    : ALL_POSITIONS.filter((pos) => pos !== 'Manager');
 
   useEffect(() => {
     fetchStaff();
@@ -43,7 +68,7 @@ const StaffManagement = () => {
         toast.success('Staff updated successfully');
       } else {
         await createStaff(formData);
-        toast.success('Staff created successfully');
+        toast.success('Staff created successfully. A welcome email has been sent.');
       }
       setShowModal(false);
       setEditingStaff(null);
@@ -164,14 +189,22 @@ const StaffManagement = () => {
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Position</label>
-                <input
-                  type="text"
+                <select
                   className="input"
                   value={formData.position}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  placeholder="e.g., Chef, Waiter, Manager"
                   required
-                />
+                >
+                  <option value="">Select Position</option>
+                  {positionOptions.map((pos) => (
+                    <option key={pos} value={pos}>{pos}</option>
+                  ))}
+                </select>
+                {!isOwner && (
+                  <small style={{ color: '#6B7280' }}>
+                    Only an Owner can assign the Manager position.
+                  </small>
+                )}
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Email</label>
@@ -201,7 +234,7 @@ const StaffManagement = () => {
                 />
               </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label>Salary ($)</label>
+                <label>Salary (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -212,13 +245,16 @@ const StaffManagement = () => {
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Shift</label>
-                <input
-                  type="text"
+                <select
                   className="input"
                   value={formData.shift}
                   onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
-                  placeholder="e.g., Morning, Evening, Night"
-                />
+                >
+                  <option value="">Select Shift</option>
+                  {SHIFT_OPTIONS.map((shift) => (
+                    <option key={shift} value={shift}>{shift}</option>
+                  ))}
+                </select>
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>

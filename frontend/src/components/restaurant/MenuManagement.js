@@ -3,6 +3,19 @@ import { FiPlus, FiEdit2, FiTrash2, FiToggleLeft, FiToggleRight } from 'react-ic
 import { getMenuItems, createMenuItem, updateMenuItem, deleteMenuItem, toggleMenuItemAvailability } from '../../api/restaurantApi';
 import toast from 'react-hot-toast';
 
+// Fixed list of menu categories shown in the dropdown
+const MENU_CATEGORIES = [
+  'Main Menu',
+  'Starters',
+  'Desserts',
+  'Snacks',
+  'Beverages',
+  'Salads',
+  'Soups',
+  'Breads',
+  'Combos'
+];
+
 const MenuManagement = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +25,7 @@ const MenuManagement = () => {
     name: '',
     description: '',
     price: 0,
-    category: '',
+    category: MENU_CATEGORIES[0],
     isAvailable: true,
     preparationTime: 15,
     calories: 0
@@ -46,7 +59,7 @@ const MenuManagement = () => {
       }
       setShowModal(false);
       setEditingItem(null);
-      setFormData({ name: '', description: '', price: 0, category: '', isAvailable: true, preparationTime: 15, calories: 0 });
+      setFormData({ name: '', description: '', price: 0, category: MENU_CATEGORIES[0], isAvailable: true, preparationTime: 15, calories: 0 });
       fetchMenuItems();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Operation failed');
@@ -109,8 +122,8 @@ const MenuManagement = () => {
             {menuItems.map((item) => (
               <tr key={item.id}>
                 <td><strong>{item.name}</strong></td>
-                <td>{item.category || 'General'}</td>
-                <td>${formatPrice(item.price)}</td>
+                <td>{item.category || 'Main Menu'}</td>
+                <td>₹{formatPrice(item.price)}</td>
                 <td>{item.preparationTime} min</td>
                 <td>{item.calories || '-'}</td>
                 <td>
@@ -191,7 +204,7 @@ const MenuManagement = () => {
                 />
               </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label>Price ($)</label>
+                <label>Price (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -203,13 +216,16 @@ const MenuManagement = () => {
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Category</label>
-                <input
-                  type="text"
+                <select
                   className="input"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="e.g., Appetizers, Main Course, Desserts"
-                />
+                  required
+                >
+                  {MENU_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Preparation Time (minutes)</label>
@@ -249,7 +265,7 @@ const MenuManagement = () => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingItem(null);
-                    setFormData({ name: '', description: '', price: 0, category: '', isAvailable: true, preparationTime: 15, calories: 0 });
+                    setFormData({ name: '', description: '', price: 0, category: MENU_CATEGORIES[0], isAvailable: true, preparationTime: 15, calories: 0 });
                   }}
                 >
                   Cancel

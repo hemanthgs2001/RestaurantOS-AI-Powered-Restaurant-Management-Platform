@@ -1,11 +1,20 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+const Supplier = require('./Supplier');
 
 const SupplierInvoice = sequelize.define('SupplierInvoice', {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
+  },
+  supplierId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: Supplier,
+      key: 'id',
+    },
   },
   invoiceNumber: {
     type: DataTypes.STRING,
@@ -42,5 +51,9 @@ const SupplierInvoice = sequelize.define('SupplierInvoice', {
 }, {
   timestamps: true,
 });
+
+// Associations (needed for `include: [{ model: Supplier }]` in the controllers)
+SupplierInvoice.belongsTo(Supplier, { foreignKey: 'supplierId' });
+Supplier.hasMany(SupplierInvoice, { foreignKey: 'supplierId' });
 
 module.exports = SupplierInvoice;

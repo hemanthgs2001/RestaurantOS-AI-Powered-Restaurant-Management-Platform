@@ -107,7 +107,7 @@ const searchSuppliers = async (req, res) => {
     const [results] = await sequelize.query(`
       SELECT * FROM "Suppliers" 
       WHERE name ILIKE :query 
-      OR contactPerson ILIKE :query 
+      OR "contactPerson" ILIKE :query 
       OR email ILIKE :query
       ORDER BY name ASC
     `, {

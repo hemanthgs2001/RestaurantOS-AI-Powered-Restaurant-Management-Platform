@@ -9,7 +9,7 @@ const Staff = require('./Staff');
 const Product = require('./Product');
 const Category = require('./Categoury');
 const Warehouse = require('./Warehouse');
-const StockTransaction = require('./StockTranscation');
+const StockTranscation = require('./StockTranscation');
 const PurchaseOrder = require('./PurchaseOrder');
 const ExpenseCategory = require('./ExpenseCategory');
 const ExpenseRecord = require('./ExpenseRecord');
@@ -29,7 +29,7 @@ module.exports = {
   Product,
   Category,
   Warehouse,
-  StockTransaction,
+  StockTranscation,
   PurchaseOrder,
   ExpenseCategory,
   ExpenseRecord,

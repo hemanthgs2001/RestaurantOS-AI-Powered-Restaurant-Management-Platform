@@ -14,10 +14,7 @@ const Product = sequelize.define('Product', {
   description: {
     type: DataTypes.TEXT,
   },
-  sku: {
-    type: DataTypes.STRING,
-    unique: true,
-  },
+  
   unit: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -26,18 +23,12 @@ const Product = sequelize.define('Product', {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
   },
-  reorderLevel: {
-    type: DataTypes.DECIMAL(10, 2),
-    defaultValue: 10,
-  },
+  
   unitPrice: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
   },
-  costPrice: {
-    type: DataTypes.DECIMAL(10, 2),
-    defaultValue: 0,
-  },
+  
 }, {
   timestamps: true,
 });

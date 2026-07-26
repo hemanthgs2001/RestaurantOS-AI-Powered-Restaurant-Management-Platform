@@ -123,8 +123,8 @@ const getMonthlyExpenses = async (req, res) => {
       SELECT 
         EXTRACT(MONTH FROM e."date") as month,
         SUM(e.amount) as amount,
-        c.name as categoryName,
-        c.color as categoryColor
+        c.name as "categoryName",
+        c.color as "categoryColor"
       FROM "ExpenseRecords" e
       LEFT JOIN "ExpenseCategories" c ON e."categoryId" = c.id
       WHERE EXTRACT(YEAR FROM e."date") = :year
@@ -166,11 +166,11 @@ const getExpenseSummary = async (req, res) => {
     
     const [results] = await sequelize.query(`
       SELECT 
-        COUNT(*) as totalCount,
-        SUM(e.amount) as totalAmount,
-        AVG(e.amount) as avgAmount,
-        MIN(e.amount) as minAmount,
-        MAX(e.amount) as maxAmount
+        COUNT(*) as "totalCount",
+        SUM(e.amount) as "totalAmount",
+        AVG(e.amount) as "avgAmount",
+        MIN(e.amount) as "minAmount",
+        MAX(e.amount) as "maxAmount"
       FROM "ExpenseRecords" e
       WHERE ${whereClause}
     `, {

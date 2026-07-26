@@ -1,4 +1,4 @@
-const StockTransaction = require('../models/StockTranscation');
+const StockTranscation = require('../models/StockTranscation');
 const Product = require('../models/Product');
 const { sequelize } = require('../config/database');
 const notificationService = require('../services/notificationService');
@@ -47,7 +47,7 @@ const stockIn = async (req, res) => {
     }, { transaction });
     
     // Create transaction record
-    await StockTransaction.create({
+    await StockTranscation.create({
       productId,
       type: 'in',
       quantity,
@@ -118,7 +118,7 @@ const stockOut = async (req, res) => {
     await product.update({ quantity: newQuantity }, { transaction });
     
     // Create transaction record
-    await StockTransaction.create({
+    await StockTranscation.create({
       productId,
       type: 'out',
       quantity,
@@ -163,13 +163,13 @@ const stockOut = async (req, res) => {
 // @desc    Get stock transactions
 // @route   GET /api/inventory/stock/transactions
 // @access  Private
-const getStockTransactions = async (req, res) => {
+const getStockTranscations = async (req, res) => {
   try {
     const { limit = 100, productId } = req.query;
     const where = {};
     if (productId) where.productId = productId;
     
-    const transactions = await StockTransaction.findAll({
+    const transactions = await StockTranscation.findAll({
       where,
       include: [{ model: Product, attributes: ['name', 'unit'] }],
       order: [['createdAt', 'DESC']],
@@ -213,6 +213,6 @@ module.exports = {
   getAllStock,
   stockIn,
   stockOut,
-  getStockTransactions,
+  getStockTranscations,
   getStockSummary
 };

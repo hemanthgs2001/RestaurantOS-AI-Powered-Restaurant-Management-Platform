@@ -18,11 +18,22 @@ const Table = sequelize.define('Table', {
     defaultValue: 4,
   },
   status: {
-    type: DataTypes.ENUM('available', 'occupied', 'reserved', 'maintenance'),
+    type: DataTypes.ENUM('available', 'reserved', 'maintenance'),
     defaultValue: 'available',
   },
   section: {
     type: DataTypes.STRING,
+  },
+  // Timestamp of when the reservation starts (the selected in-time)
+  bookedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  // Auto-computed as bookedAt + the default booking duration - the table
+  // auto-frees back to 'available' once this passes
+  outTime: {
+    type: DataTypes.DATE,
+    allowNull: true,
   },
 }, {
   timestamps: true,

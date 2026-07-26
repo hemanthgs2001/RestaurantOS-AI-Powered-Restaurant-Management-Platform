@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getStock, stockIn, stockOut, getStockTransactions } from '../../api/inventoryApi';
+import { getStock, stockIn, stockOut, getStockTranscations } from '../../api/inventoryApi';
 import toast from 'react-hot-toast';
 
 const StockInOut = () => {
@@ -24,7 +24,7 @@ const StockInOut = () => {
       setLoading(true);
       const [stockRes, transRes] = await Promise.all([
         getStock(),
-        getStockTransactions()
+        getStockTranscations()
       ]);
       setStock(stockRes.data);
       setTransactions(transRes.data);

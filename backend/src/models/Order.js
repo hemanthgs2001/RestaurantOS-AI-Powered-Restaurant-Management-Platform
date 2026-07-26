@@ -7,14 +7,26 @@ const Order = sequelize.define('Order', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
+  // Sequential per-day number ("1", "2", ...). Resets to 1 every 24 hours,
+  // so it is intentionally NOT unique across different days.
   orderNumber: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
+  },
+  tableNumber: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
   status: {
-    type: DataTypes.ENUM('pending', 'preparing', 'ready', 'served', 'completed', 'cancelled'),
-    defaultValue: 'pending',
+    type: DataTypes.ENUM('accepted', 'cancelled'),
+    defaultValue: 'accepted',
+  },
+  // Snapshot of the menu items selected for this order, captured at the
+  // time of ordering (so later menu price changes don't rewrite history).
+  // Shape: [{ menuItemId, name, price, quantity, subtotal }]
+  items: {
+    type: DataTypes.JSON,
+    defaultValue: [],
   },
   totalAmount: {
     type: DataTypes.DECIMAL(10, 2),

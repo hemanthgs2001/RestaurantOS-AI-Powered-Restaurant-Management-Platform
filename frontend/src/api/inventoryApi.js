@@ -22,7 +22,7 @@ export const deleteWarehouse = (id) => axios.delete(`/inventory/warehouses/${id}
 export const getStock = () => axios.get('/inventory/stock');
 export const stockIn = (data) => axios.post('/inventory/stock/in', data);
 export const stockOut = (data) => axios.post('/inventory/stock/out', data);
-export const getStockTransactions = () => axios.get('/inventory/stock/transactions');
+export const getStockTranscations = () => axios.get('/inventory/stock/transactions');
 
 // Purchase Orders
 export const getPurchaseOrders = () => axios.get('/inventory/purchase-orders');

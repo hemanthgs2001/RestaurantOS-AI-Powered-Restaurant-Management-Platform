@@ -1,7 +1,8 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+const Product = require('./Product');
 
-const StockTransaction = sequelize.define('StockTransaction', {
+const StockTranscation = sequelize.define('StockTranscation', {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -31,4 +32,8 @@ const StockTransaction = sequelize.define('StockTransaction', {
   timestamps: true,
 });
 
-module.exports = StockTransaction;
+// Associations
+StockTranscation.belongsTo(Product, { foreignKey: 'productId' });
+Product.hasMany(StockTranscation, { foreignKey: 'productId' });
+
+module.exports = StockTranscation;

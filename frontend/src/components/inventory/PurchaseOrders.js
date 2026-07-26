@@ -91,6 +91,15 @@ const PurchaseOrders = () => {
     return badges[status] || 'badge-info';
   };
 
+  // Sequelize returns DECIMAL columns (like totalAmount) as strings, not
+  // numbers, so calling .toFixed() directly on order.totalAmount can throw
+  // and crash the page. This safely coerces to a number first.
+  const formatAmount = (amt) => {
+    const n = typeof amt === 'number' ? amt : parseFloat(amt);
+    if (Number.isNaN(n) || n === null || n === undefined) return '0.00';
+    return n.toFixed(2);
+  };
+
   if (loading) return <div className="flex-center" style={{ height: '400px' }}>Loading...</div>;
 
   return (
@@ -119,7 +128,7 @@ const PurchaseOrders = () => {
               <tr key={order.id}>
                 <td><strong>{order.orderNumber}</strong></td>
                 <td>{order.supplierName || 'N/A'}</td>
-                <td>${order.totalAmount?.toFixed(2)}</td>
+                <td>${formatAmount(order.totalAmount)}</td>
                 <td>{order.expectedDelivery ? new Date(order.expectedDelivery).toLocaleDateString() : 'N/A'}</td>
                 <td>
                   <select
@@ -191,7 +200,7 @@ const PurchaseOrders = () => {
             <div style={{ marginTop: '1rem' }}>
               <p><strong>Order Number:</strong> {selectedOrder.orderNumber}</p>
               <p><strong>Supplier:</strong> {selectedOrder.supplierName}</p>
-              <p><strong>Total Amount:</strong> ${selectedOrder.totalAmount?.toFixed(2)}</p>
+              <p><strong>Total Amount:</strong> ${formatAmount(selectedOrder.totalAmount)}</p>
               <p><strong>Status:</strong> {selectedOrder.status}</p>
               <p><strong>Expected Delivery:</strong> {selectedOrder.expectedDelivery ? new Date(selectedOrder.expectedDelivery).toLocaleDateString() : 'N/A'}</p>
               {selectedOrder.notes && <p><strong>Notes:</strong> {selectedOrder.notes}</p>}

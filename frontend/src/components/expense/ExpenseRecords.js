@@ -111,7 +111,7 @@ const ExpenseRecords = () => {
                   </span>
                 </td>
                 <td>{expense.description}</td>
-                <td><strong>${expense.amount?.toFixed(2)}</strong></td>
+                <td><strong>{formatCurrency(expense.amount)}</strong></td>
                 <td>{expense.paymentMethod?.replace('_', ' ')}</td>
                 <td>
                   <button
