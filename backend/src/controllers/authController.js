@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const { sequelize } = require('../config/database');
 
@@ -9,12 +10,67 @@ const generateToken = (id) => {
   });
 };
 
+// ---- Mail transporter ----
+// Configure these in your .env file (same vars used elsewhere, e.g. staffController.js):
+//   EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_FROM, EMAIL_SECURE (optional, 'true'/'false')
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 587,
+  secure: process.env.EMAIL_SECURE === 'true',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// Sends a welcome email to a newly registered user, including their
+// password so they have it on hand for their first login.
+// Failures here are logged but never block the API response, since a mail
+// server hiccup shouldn't prevent an account from being created.
+const sendUserWelcomeEmail = async (user, plainPassword) => {
+  if (!user.email) return;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: user.email,
+      subject: 'Welcome to RestaurantOS!',
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #1F2937;">
+          <h2>Welcome, ${user.name}!</h2>
+          <p>Your account has been created successfully.</p>
+          <p><strong>Email:</strong> ${user.email}</p>
+          <p><strong>Password:</strong> ${plainPassword}</p>
+          <p><strong>Role:</strong> ${user.role}</p>
+          <p>For security, we recommend logging in and changing your password as soon as possible.</p>
+        </div>
+      `
+    });
+  } catch (error) {
+    console.error('Failed to send user welcome email:', error);
+  }
+};
+
 // @desc    Register user
 // @route   POST /api/auth/register
-// @access  Public
+// @access  Public (gated by a secret key)
+//
+// Configure the gate key in your .env file:
+//   REGISTRATION_SECRET_KEY=some-long-random-string
+//
+// The registration form must submit this exact value in `secretKey`.
+// No key, or the wrong key, means no user is created.
 const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, secretKey } = req.body;
+
+    // ---- Secret key gate ----
+    if (!secretKey || secretKey !== process.env.REGISTRATION_SECRET_KEY) {
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid or missing secret key. Registration is not allowed.',
+      });
+    }
 
     // Check if user exists
     const existingUser = await User.findOne({ where: { email } });
@@ -26,6 +82,8 @@ const register = async (req, res) => {
     }
 
     // Create user
+    // (password is stored as-is here because the User model handles hashing
+    // internally via its own hook, same as before — comparePassword relies on it)
     const user = await User.create({
       name,
       email,
@@ -33,8 +91,12 @@ const register = async (req, res) => {
       role: role || 'waiter',
     });
 
+    // Fire off the welcome email with the plaintext password (non-blocking failure)
+    await sendUserWelcomeEmail(user, password);
+
     res.status(201).json({
       success: true,
+      message: 'Registration successful. A welcome email has been sent.',
       data: {
         id: user.id,
         name: user.name,

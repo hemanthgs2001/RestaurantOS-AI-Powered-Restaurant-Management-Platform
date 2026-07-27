@@ -17,8 +17,10 @@ const Order = sequelize.define('Order', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  // Order lifecycle is limited to these 3 states.
   status: {
-    type: DataTypes.ENUM('accepted', 'cancelled'),
+    type: DataTypes.ENUM('accepted', 'cancelled', 'completed'),
+    allowNull: false,
     defaultValue: 'accepted',
   },
   // Snapshot of the menu items selected for this order, captured at the
@@ -26,25 +28,32 @@ const Order = sequelize.define('Order', {
   // Shape: [{ menuItemId, name, price, quantity, subtotal }]
   items: {
     type: DataTypes.JSON,
+    allowNull: false,
     defaultValue: [],
   },
   totalAmount: {
     type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
     defaultValue: 0,
   },
   paymentStatus: {
     type: DataTypes.ENUM('pending', 'paid', 'partially_paid'),
+    allowNull: false,
     defaultValue: 'pending',
   },
   paymentMethod: {
     type: DataTypes.ENUM('cash', 'card', 'mobile', 'other'),
+    allowNull: false,
+    defaultValue: 'cash',
   },
   orderType: {
     type: DataTypes.ENUM('dine_in', 'takeaway', 'delivery'),
+    allowNull: false,
     defaultValue: 'dine_in',
   },
   notes: {
     type: DataTypes.TEXT,
+    allowNull: true,
   },
 }, {
   timestamps: true,

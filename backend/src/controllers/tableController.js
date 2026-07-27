@@ -11,7 +11,7 @@ const MAX_TABLES_PER_SECTION = 10;
 // duration. Change this single value to adjust the booking slot length.
 const DEFAULT_BOOKING_DURATION_HOURS = 12;
 
-const VALID_STATUSES = ['available', 'reserved', 'maintenance'];
+const VALID_STATUSES = ['available', 'occupied', 'reserved', 'maintenance'];
 
 // Finds tables that were reserved whose out-time has passed and flips them
 // back to 'available', clearing the booking fields. Called at the top of

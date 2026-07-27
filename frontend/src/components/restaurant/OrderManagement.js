@@ -7,10 +7,11 @@ import toast from 'react-hot-toast';
 // Keep in sync with the sections used in Table Management.
 const SECTIONS = ['Main', 'Patio', 'VIP', 'Outdoor', 'Private'];
 
-// Orders can only be Accepted or Cancelled.
-const STATUS_OPTIONS = ['accepted', 'cancelled'];
+// Orders can be Accepted, Cancelled, or Completed.
+const STATUS_OPTIONS = ['accepted', 'cancelled', 'completed'];
 
 const DEFAULT_FORM_STATE = {
+  orderNumber: '',
   tableSection: '',
   tableNumber: '',
   status: 'accepted',
@@ -161,6 +162,12 @@ const OrderManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.orderNumber || !String(formData.orderNumber).trim()) {
+      toast.error('Order number is required');
+      return;
+    }
+
     // tableSection only drives the dropdown UI - strip it before sending
     const { tableSection, ...rest } = formData;
     const payload = {
@@ -180,7 +187,11 @@ const OrderManagement = () => {
       resetForm();
       fetchOrders();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Operation failed');
+      // Surface the server's detailed reason (e.g. missing column,
+      // invalid enum value) instead of a generic failure message.
+      const detail = error.response?.data?.detail;
+      const message = error.response?.data?.message || 'Operation failed';
+      toast.error(detail ? `${message}: ${detail}` : message);
     }
   };
 
@@ -202,7 +213,9 @@ const OrderManagement = () => {
       toast.success('Order status updated');
       fetchOrders();
     } catch (error) {
-      toast.error('Failed to update status');
+      const detail = error.response?.data?.detail;
+      const message = error.response?.data?.message || 'Failed to update status';
+      toast.error(detail ? `${message}: ${detail}` : message);
     }
   };
 
@@ -225,7 +238,8 @@ const OrderManagement = () => {
   const getStatusBadge = (status) => {
     const badges = {
       accepted: 'badge-success',
-      cancelled: 'badge-danger'
+      cancelled: 'badge-danger',
+      completed: 'badge-info'
     };
     return badges[status] || 'badge-info';
   };
@@ -263,6 +277,7 @@ const OrderManagement = () => {
           <option value="">All Status</option>
           <option value="accepted">Accepted</option>
           <option value="cancelled">Cancelled</option>
+          <option value="completed">Completed</option>
         </select>
         <select className="input" style={{ width: 'auto' }}>
           <option value="">All Types</option>
@@ -442,18 +457,32 @@ const OrderManagement = () => {
           }}>
             <h2>{editingOrder ? 'Edit Order' : 'Create Order'}</h2>
             <form onSubmit={handleSubmit}>
-              {/* Order number is auto-generated (resets to 1 every 24 hours) -
-                  shown read-only when editing, hidden entirely on create. */}
+              {/* Order number is entered manually by staff. */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label>Order Number</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={formData.orderNumber}
+                  onChange={(e) => setFormData({ ...formData, orderNumber: e.target.value })}
+                  placeholder="e.g. 101"
+                  required
+                />
+              </div>
+
+              {/* Status is editable here too, in addition to the table dropdown */}
               {editingOrder && (
                 <div style={{ marginBottom: '1rem' }}>
-                  <label>Order Number</label>
-                  <input
-                    type="text"
+                  <label>Status</label>
+                  <select
                     className="input"
-                    value={`#${formData.orderNumber}`}
-                    disabled
-                    style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
-                  />
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                    ))}
+                  </select>
                 </div>
               )}
 

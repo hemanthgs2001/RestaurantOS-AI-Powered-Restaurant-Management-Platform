@@ -13,16 +13,35 @@ const BACKGROUND_IMAGES = [
 
 const SLIDE_INTERVAL_MS = 4000;
 
+// Simple inline eye / eye-off icons (no external icon lib needed)
+const EyeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+);
+
 const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'waiter'
+    role: 'waiter',
+    secretKey: ''
   });
   const [loading, setLoading] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showSecretKey, setShowSecretKey] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -58,7 +77,7 @@ const Register = () => {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        height: '100vh',
         position: 'relative',
         overflow: 'hidden',
         background: '#2F4348',
@@ -127,7 +146,7 @@ const Register = () => {
       <div
         style={{
           position: 'absolute',
-          top: '2.5rem',
+          top: '2rem',
           left: '3rem',
           zIndex: 2,
           maxWidth: '480px',
@@ -135,7 +154,7 @@ const Register = () => {
       >
         <h1
           style={{
-            fontSize: '2.6rem',
+            fontSize: '2.4rem',
             color: '#F2FCFA',
             margin: 0,
             letterSpacing: '1px',
@@ -147,9 +166,9 @@ const Register = () => {
         <p
           style={{
             color: '#DDF7F1',
-            marginTop: '0.6rem',
-            fontSize: '1.05rem',
-            lineHeight: 1.5,
+            marginTop: '0.5rem',
+            fontSize: '1rem',
+            lineHeight: 1.45,
             textShadow: '0 1px 6px rgba(0,0,0,0.5)',
           }}
         >
@@ -162,10 +181,10 @@ const Register = () => {
           style={{
             listStyle: 'none',
             padding: 0,
-            margin: '1.4rem 0 0 0',
+            margin: '1.1rem 0 0 0',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.7rem',
+            gap: '0.55rem',
           }}
         >
           {[
@@ -181,7 +200,7 @@ const Register = () => {
                 alignItems: 'flex-start',
                 gap: '0.6rem',
                 color: '#F2FCFA',
-                fontSize: '0.95rem',
+                fontSize: '0.9rem',
                 textShadow: '0 1px 6px rgba(0,0,0,0.5)',
               }}
             >
@@ -208,30 +227,33 @@ const Register = () => {
           display: 'flex',
           justifyContent: 'flex-end',
           alignItems: 'center',
-          minHeight: '100vh',
-          padding: '2rem 5rem 2rem 1rem',
+          height: '100vh',
+          padding: '1rem 5rem 1rem 1rem',
+          boxSizing: 'border-box',
         }}
       >
         <div
           style={{
             background: 'rgba(88, 209, 179, 0.22)', // mint green, transparent glass panel
             backdropFilter: 'blur(14px)',
-            padding: '2.5rem',
+            padding: '1.5rem 2rem',
             borderRadius: '16px',
             boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
             border: '1px solid rgba(255, 255, 255, 0.25)',
             width: '100%',
-            maxWidth: '460px',
+            maxWidth: '440px',
+            maxHeight: '94vh',
+            overflow: 'hidden',
           }}
         >
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.6rem', color: '#F2FCFA', margin: 0, textShadow: '0 1px 6px rgba(0,0,0,0.4)' }}>RestaurantOS</h2>
-            <p style={{ color: '#DDF7F1', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>Create your account</p>
+          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.4rem', color: '#F2FCFA', margin: 0, textShadow: '0 1px 6px rgba(0,0,0,0.4)' }}>RestaurantOS</h2>
+            <p style={{ color: '#DDF7F1', margin: '0.2rem 0 0 0', fontSize: '0.9rem', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>Create your account</p>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+            <div style={{ marginBottom: '0.65rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500', fontSize: '0.88rem', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
                 Full Name
               </label>
               <input
@@ -246,12 +268,17 @@ const Register = () => {
                   background: '#F2FCFA',
                   border: '1px solid rgba(47, 67, 72, 0.25)',
                   color: '#2F4348',
+                  padding: '0.5rem 0.7rem',
+                  fontSize: '0.9rem',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  borderRadius: '6px',
                 }}
               />
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+            <div style={{ marginBottom: '0.65rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500', fontSize: '0.88rem', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
                 Email Address
               </label>
               <input
@@ -266,52 +293,111 @@ const Register = () => {
                   background: '#F2FCFA',
                   border: '1px solid rgba(47, 67, 72, 0.25)',
                   color: '#2F4348',
+                  padding: '0.5rem 0.7rem',
+                  fontSize: '0.9rem',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  borderRadius: '6px',
                 }}
               />
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+            <div style={{ marginBottom: '0.65rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500', fontSize: '0.88rem', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
                 Password
               </label>
-              <input
-                type="password"
-                name="password"
-                className="input themed-input"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
-                style={{
-                  background: '#F2FCFA',
-                  border: '1px solid rgba(47, 67, 72, 0.25)',
-                  color: '#2F4348',
-                }}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  className="input themed-input"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password"
+                  required
+                  style={{
+                    background: '#F2FCFA',
+                    border: '1px solid rgba(47, 67, 72, 0.25)',
+                    color: '#2F4348',
+                    padding: '0.5rem 2.4rem 0.5rem 0.7rem',
+                    fontSize: '0.9rem',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    borderRadius: '6px',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  style={{
+                    position: 'absolute',
+                    right: '0.6rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#2F4348',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+            <div style={{ marginBottom: '0.65rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500', fontSize: '0.88rem', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
                 Confirm Password
               </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                className="input themed-input"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-                required
-                style={{
-                  background: '#F2FCFA',
-                  border: '1px solid rgba(47, 67, 72, 0.25)',
-                  color: '#2F4348',
-                }}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  className="input themed-input"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
+                  required
+                  style={{
+                    background: '#F2FCFA',
+                    border: '1px solid rgba(47, 67, 72, 0.25)',
+                    color: '#2F4348',
+                    padding: '0.5rem 2.4rem 0.5rem 0.7rem',
+                    fontSize: '0.9rem',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    borderRadius: '6px',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  style={{
+                    position: 'absolute',
+                    right: '0.6rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#2F4348',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+            <div style={{ marginBottom: '0.65rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500', fontSize: '0.88rem', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
                 Role
               </label>
               <select
@@ -323,6 +409,11 @@ const Register = () => {
                   background: '#F2FCFA',
                   border: '1px solid rgba(47, 67, 72, 0.25)',
                   color: '#2F4348',
+                  padding: '0.5rem 0.7rem',
+                  fontSize: '0.9rem',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  borderRadius: '6px',
                 }}
               >
                 <option value="waiter">Waiter</option>
@@ -333,16 +424,68 @@ const Register = () => {
               </select>
             </div>
 
+            <div style={{ marginBottom: '0.9rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: '500', fontSize: '0.88rem', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                Secret Key
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showSecretKey ? 'text' : 'password'}
+                  name="secretKey"
+                  className="input themed-input"
+                  value={formData.secretKey}
+                  onChange={handleChange}
+                  placeholder="Enter the registration secret key"
+                  required
+                  style={{
+                    background: '#F2FCFA',
+                    border: '1px solid rgba(47, 67, 72, 0.25)',
+                    color: '#2F4348',
+                    padding: '0.5rem 2.4rem 0.5rem 0.7rem',
+                    fontSize: '0.9rem',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    borderRadius: '6px',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecretKey((prev) => !prev)}
+                  aria-label={showSecretKey ? 'Hide secret key' : 'Show secret key'}
+                  style={{
+                    position: 'absolute',
+                    right: '0.6rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#2F4348',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  {showSecretKey ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
+              <small style={{ color: '#DDF7F1', display: 'block', marginTop: '0.3rem', fontSize: '0.78rem' }}>
+                Ask your Owner/Admin for this key. Without it, no account will be created.
+              </small>
+            </div>
+
             <button
               type="submit"
               className="btn btn-primary"
               style={{
                 width: '100%',
-                padding: '0.8rem',
-                fontSize: '1rem',
+                padding: '0.65rem',
+                fontSize: '0.95rem',
                 background: '#58D1B3', // mint green accent
                 color: '#183430',
                 border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
               }}
               disabled={loading}
             >
@@ -350,7 +493,7 @@ const Register = () => {
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', marginTop: '1.5rem', color: '#DDF7F1', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+          <p style={{ textAlign: 'center', marginTop: '0.9rem', marginBottom: 0, fontSize: '0.85rem', color: '#DDF7F1', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
             Already have an account? <Link to="/login" style={{ color: '#F2FCFA', fontWeight: 600 }}>Sign in</Link>
           </p>
         </div>

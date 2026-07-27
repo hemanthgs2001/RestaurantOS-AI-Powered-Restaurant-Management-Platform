@@ -1,30 +1,24 @@
-const { Op } = require('sequelize');
 const Order = require('../models/Order');
 const { sequelize } = require('../config/database');
 const notificationService = require('../services/notificationService');
 
-const VALID_STATUSES = ['accepted', 'cancelled'];
+// Order lifecycle is limited to these 3 states.
+const VALID_STATUSES = ['accepted', 'cancelled', 'completed'];
 
-// Generates the next sequential order number for "today" (since local
-// midnight), so numbering starts at 1 and resets every 24 hours.
-const generateOrderNumber = async () => {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-
-  const todaysOrders = await Order.findAll({
-    where: { createdAt: { [Op.gte]: startOfDay } },
-    attributes: ['orderNumber']
-  });
-
-  let maxNumber = 0;
-  todaysOrders.forEach((order) => {
-    const parsed = parseInt(order.orderNumber, 10);
-    if (!Number.isNaN(parsed) && parsed > maxNumber) {
-      maxNumber = parsed;
-    }
-  });
-
-  return String(maxNumber + 1);
+// Turns a Sequelize error into a client-safe, human-readable message
+// instead of a generic "Failed to ..." string, and always logs the full
+// error server-side so root causes (missing column, bad enum value,
+// failed validation, etc.) are visible instead of hidden behind a 500.
+const describeError = (error) => {
+  if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+    return error.errors?.map((e) => e.message).join('; ') || error.message;
+  }
+  if (error.name === 'SequelizeDatabaseError') {
+    // e.g. "column tableNumber does not exist" or
+    // "invalid input value for enum enum_Orders_status: \"pending\""
+    return error.parent?.message || error.message;
+  }
+  return error.message;
 };
 
 // @desc    Get all orders
@@ -38,7 +32,7 @@ const getAllOrders = async (req, res) => {
     res.status(200).json(orders);
   } catch (error) {
     console.error('Get orders error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch orders' });
+    res.status(500).json({ success: false, message: 'Failed to fetch orders', detail: describeError(error) });
   }
 };
 
@@ -54,7 +48,7 @@ const getOrderById = async (req, res) => {
     res.status(200).json(order);
   } catch (error) {
     console.error('Get order error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch order' });
+    res.status(500).json({ success: false, message: 'Failed to fetch order', detail: describeError(error) });
   }
 };
 
@@ -65,13 +59,24 @@ const getOrderById = async (req, res) => {
 // `orderNumber` is auto-generated (1, 2, 3... resetting daily) unless explicitly provided.
 const createOrder = async (req, res) => {
   try {
-    if (!req.body.orderNumber) {
-      req.body.orderNumber = await generateOrderNumber();
+    // Order number is entered manually by staff, not auto-generated.
+    if (!req.body.orderNumber || !String(req.body.orderNumber).trim()) {
+      return res.status(400).json({ success: false, message: 'Order number is required' });
     }
+    req.body.orderNumber = String(req.body.orderNumber).trim();
 
     // Normalize tableNumber (allow blank string from forms to become null)
     if (req.body.tableNumber === '' || req.body.tableNumber === undefined) {
       req.body.tableNumber = null;
+    }
+
+    // Guard against an invalid/unsupported status ever reaching the DB
+    // (e.g. a stale frontend still sending 'pending' or 'preparing').
+    if (req.body.status && !VALID_STATUSES.includes(req.body.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Status must be one of: ${VALID_STATUSES.join(', ')}`
+      });
     }
 
     const order = await Order.create(req.body);
@@ -82,14 +87,14 @@ const createOrder = async (req, res) => {
         io,
         'order_received',
         'New order received',
-        `Order #${order.orderNumber}${tableInfo} was placed and is pending processing.`,
+        `Order #${order.orderNumber}${tableInfo} was placed.`,
         { orderId: order.id, status: order.status }
       );
     }
     res.status(201).json(order);
   } catch (error) {
     console.error('Create order error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create order' });
+    res.status(500).json({ success: false, message: 'Failed to create order', detail: describeError(error) });
   }
 };
 
@@ -107,11 +112,18 @@ const updateOrder = async (req, res) => {
       req.body.tableNumber = null;
     }
 
+    if (req.body.status && !VALID_STATUSES.includes(req.body.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Status must be one of: ${VALID_STATUSES.join(', ')}`
+      });
+    }
+
     await order.update(req.body);
     res.status(200).json(order);
   } catch (error) {
     console.error('Update order error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update order' });
+    res.status(500).json({ success: false, message: 'Failed to update order', detail: describeError(error) });
   }
 };
 
@@ -128,14 +140,14 @@ const deleteOrder = async (req, res) => {
     res.status(200).json({ success: true, message: 'Order deleted successfully' });
   } catch (error) {
     console.error('Delete order error:', error);
-    res.status(500).json({ success: false, message: 'Failed to delete order' });
+    res.status(500).json({ success: false, message: 'Failed to delete order', detail: describeError(error) });
   }
 };
 
 // @desc    Update order status
 // @route   PATCH /api/restaurant/orders/:id/status
 // @access  Private
-// Status is limited to 'accepted' or 'cancelled'.
+// Status is limited to 'accepted', 'cancelled', or 'completed'.
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -158,12 +170,16 @@ const updateOrderStatus = async (req, res) => {
     await order.update({ status });
     const io = req.app.get('io');
     if (io && previousStatus !== status) {
-      const title = status === 'accepted' ? 'Order accepted' : 'Order cancelled';
+      const titles = {
+        accepted: 'Order accepted',
+        cancelled: 'Order cancelled',
+        completed: 'Order completed'
+      };
       const message = `Order #${order.orderNumber} status changed to ${status}.`;
       await notificationService.emitNotification(
         io,
         'order_status',
-        title,
+        titles[status] || 'Order status updated',
         message,
         { orderId: order.id, status }
       );
@@ -171,7 +187,7 @@ const updateOrderStatus = async (req, res) => {
     res.status(200).json(order);
   } catch (error) {
     console.error('Update order status error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update order status' });
+    res.status(500).json({ success: false, message: 'Failed to update order status', detail: describeError(error) });
   }
 };
 
@@ -188,7 +204,7 @@ const getOrdersByStatus = async (req, res) => {
     res.status(200).json(orders);
   } catch (error) {
     console.error('Get orders by status error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch orders' });
+    res.status(500).json({ success: false, message: 'Failed to fetch orders', detail: describeError(error) });
   }
 };
 
@@ -202,13 +218,14 @@ const getOrderStats = async (req, res) => {
         COUNT(*) as total,
         SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted,
         SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
-        SUM(totalAmount) as totalRevenue
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM("totalAmount") as totalRevenue
       FROM "Orders"
     `);
     res.status(200).json(results[0]);
   } catch (error) {
     console.error('Get order stats error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch order statistics' });
+    res.status(500).json({ success: false, message: 'Failed to fetch order statistics', detail: describeError(error) });
   }
 };
 

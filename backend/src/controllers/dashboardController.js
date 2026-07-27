@@ -16,9 +16,9 @@ const getDashboardStats = async (req, res) => {
       where: { status: 'completed' },
     });
 
-    // Active Orders
+    // Active Orders (anything not yet completed or cancelled)
     const activeOrders = await Order.count({
-      where: { status: { [Op.in]: ['pending', 'preparing', 'ready'] } },
+      where: { status: { [Op.notIn]: ['completed', 'cancelled'] } },
     });
 
     // Table Occupancy
@@ -41,10 +41,10 @@ const getDashboardStats = async (req, res) => {
 
     // Active Orders List
     const activeOrdersList = await Order.findAll({
-      where: { status: { [Op.in]: ['pending', 'preparing', 'ready'] } },
+      where: { status: { [Op.notIn]: ['completed', 'cancelled'] } },
       order: [['createdAt', 'DESC']],
       limit: 5,
-      attributes: ['id', 'orderNumber', 'status', 'totalAmount'],
+      attributes: ['id', 'orderNumber', 'tableNumber', 'status', 'totalAmount'],
     });
 
     // Low Stock Items List

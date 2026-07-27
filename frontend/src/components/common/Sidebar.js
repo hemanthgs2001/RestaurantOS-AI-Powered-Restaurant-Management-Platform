@@ -70,7 +70,7 @@ const Sidebar = ({ open }) => {
       label: 'AI & Analytics',
       icon: FiCpu,
       items: [
-        { key: 'ai', path: '/ai', icon: FiCpu, label: 'AI Dashboard' },
+        { key: 'ai', path: '/ai', icon: FiCpu, label: 'AI Dashboard', end: true },
         { key: 'ai_stock', path: '/ai/stock-predictions', icon: FiTrendingUp, label: 'Stock Predictions' },
         { key: 'ai_menu', path: '/ai/menu-recommendations', icon: FiTrendingUp, label: 'Menu Recommendations' },
         { key: 'ai_invoice', path: '/ai/invoice-processing', icon: FiUpload, label: 'Invoice Processing' },
@@ -87,6 +87,7 @@ const Sidebar = ({ open }) => {
     <NavLink
       key={item.path}
       to={item.path}
+      end={item.end} 
       style={({ isActive }) => ({
         display: 'flex',
         alignItems: 'center',

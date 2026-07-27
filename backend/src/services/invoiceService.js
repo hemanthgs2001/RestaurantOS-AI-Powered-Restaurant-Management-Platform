@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const { jsonrepair } = require('jsonrepair');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 const EXTENSION_TO_MEDIA_TYPE = {
@@ -43,7 +44,10 @@ Rules:
 - If subtotal/tax aren't explicitly shown but totalAmount is, it's fine to leave subtotal/tax null.
 - "isHandwritten" should be true if the invoice text is handwritten or filled into a template by hand.
 - Numbers must be plain JSON numbers (no currency symbols, no thousands separators).
-- If there are no line items, return an empty array for "items".`;
+- If there are no line items, return an empty array for "items".
+- Each string value must be a single line: never put a literal line break inside a
+  string, collapse multi-line addresses/descriptions into one line separated by ", ".
+- Do not add a trailing comma after the last item in an array or object.`;
 
 function getMediaType(filePath, mimetype) {
   if (mimetype === 'application/pdf') return 'application/pdf';
@@ -52,10 +56,10 @@ function getMediaType(filePath, mimetype) {
   return EXTENSION_TO_MEDIA_TYPE[ext] || 'application/pdf';
 }
 
-function extractJsonFromText(text) {
+function extractJsonFromText(rawText) {
   // Gemini is asked for pure JSON via response_mime_type, but strip fences
   // defensively in case it wraps the answer in ```json ... ``` anyway.
-  const cleaned = text
+  const cleaned = rawText
     .trim()
     .replace(/^```(?:json)?/i, '')
     .replace(/```$/, '')
@@ -66,7 +70,26 @@ function extractJsonFromText(text) {
   if (firstBrace === -1 || lastBrace === -1) {
     throw new Error('Model response did not contain a JSON object');
   }
-  return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+  const candidate = cleaned.slice(firstBrace, lastBrace + 1);
+
+  // Try a strict parse first (fast path for the common case).
+  try {
+    return JSON.parse(candidate);
+  } catch (strictError) {
+    // Handwritten / messier OCR output occasionally produces near-valid
+    // JSON — a trailing comma, an unescaped newline inside a string, etc.
+    // jsonrepair fixes these classes of issues without us having to guess
+    // the exact malformation.
+    try {
+      const repaired = jsonrepair(candidate);
+      return JSON.parse(repaired);
+    } catch (repairError) {
+      console.error('--- Raw model output that failed to parse as JSON ---');
+      console.error(rawText);
+      console.error('--- End raw model output ---');
+      throw new Error(`Model returned malformed JSON: ${repairError.message}`);
+    }
+  }
 }
 
 function normalizeNumber(value) {
@@ -119,6 +142,10 @@ async function callGemini(mediaType, base64) {
         generationConfig: {
           temperature: 0,
           response_mime_type: 'application/json',
+          // Handwritten invoices can produce more verbose descriptions/OCR
+          // noise than clean printed ones — give it enough room so the
+          // JSON array never gets cut off mid-item.
+          maxOutputTokens: 4096,
         },
       }),
     });
