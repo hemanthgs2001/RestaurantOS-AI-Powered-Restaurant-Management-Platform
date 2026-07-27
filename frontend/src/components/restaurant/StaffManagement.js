@@ -7,25 +7,18 @@ import toast from 'react-hot-toast';
 const ALL_POSITIONS = ['Chef', 'Waiter', 'Manager', 'Cashier'];
 const SHIFT_OPTIONS = ['Morning', 'Evening', 'Night', 'Flexible'];
 
-// Reads the logged-in user's role.
-// NOTE: This assumes the logged-in user object is stored in localStorage under the key 'user'
-// (e.g. localStorage.setItem('user', JSON.stringify({ name, email, role }))) at login time.
-// If your app stores the current user differently (AuthContext, Redux store, JWT decode, etc.),
-// replace the body of this function with the correct lookup.
-const getCurrentUserRole = () => {
-  try {
-    const user = JSON.parse(localStorage.getItem('user'));
-    return (user?.role || '').toLowerCase();
-  } catch {
-    return '';
-  }
-};
+// ---- Validation helpers ----
+// Only allows Gmail addresses, e.g. someone@gmail.com
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+// Only allows exactly 10 digits
+const PHONE_REGEX = /^\d{10}$/;
 
 const StaffManagement = () => {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     position: '',
@@ -37,12 +30,8 @@ const StaffManagement = () => {
     isActive: true
   });
 
-  const isOwner = getCurrentUserRole() === 'owner';
-
-  // Only Owners can see/select "Manager" as a position. Everyone else gets the rest of the list.
-  const positionOptions = isOwner
-    ? ALL_POSITIONS
-    : ALL_POSITIONS.filter((pos) => pos !== 'Manager');
+  // Position dropdown now includes Manager for everyone
+  const positionOptions = ALL_POSITIONS;
 
   useEffect(() => {
     fetchStaff();
@@ -60,8 +49,29 @@ const StaffManagement = () => {
     }
   };
 
+  const validateForm = () => {
+    const errors = {};
+
+    if (formData.email && !EMAIL_REGEX.test(formData.email)) {
+      errors.email = 'Please enter a valid Gmail address (e.g. name@gmail.com)';
+    }
+
+    if (formData.phone && !PHONE_REGEX.test(formData.phone)) {
+      errors.phone = 'Phone number must be exactly 10 digits';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
+      return;
+    }
+
     try {
       if (editingStaff) {
         await updateStaff(editingStaff.id, formData);
@@ -72,6 +82,7 @@ const StaffManagement = () => {
       }
       setShowModal(false);
       setEditingStaff(null);
+      setFormErrors({});
       setFormData({ name: '', position: '', email: '', phone: '', hireDate: '', salary: 0, shift: '', isActive: true });
       fetchStaff();
     } catch (error) {
@@ -89,6 +100,12 @@ const StaffManagement = () => {
         toast.error('Failed to delete staff');
       }
     }
+  };
+
+  // Restrict phone input to digits only, max 10 characters
+  const handlePhoneChange = (e) => {
+    const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setFormData({ ...formData, phone: digitsOnly });
   };
 
   if (loading) return <div className="flex-center" style={{ height: '400px' }}>Loading...</div>;
@@ -134,6 +151,7 @@ const StaffManagement = () => {
                     onClick={() => {
                       setEditingStaff(member);
                       setFormData(member);
+                      setFormErrors({});
                       setShowModal(true);
                     }}
                     style={{ marginRight: '0.5rem' }}
@@ -200,29 +218,34 @@ const StaffManagement = () => {
                     <option key={pos} value={pos}>{pos}</option>
                   ))}
                 </select>
-                {!isOwner && (
-                  <small style={{ color: '#6B7280' }}>
-                    Only an Owner can assign the Manager position.
-                  </small>
-                )}
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Email</label>
                 <input
                   type="email"
                   className="input"
+                  placeholder="name@gmail.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
+                {formErrors.email && (
+                  <small style={{ color: '#DC2626' }}>{formErrors.email}</small>
+                )}
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Phone</label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   className="input"
+                  placeholder="10 digit phone number"
+                  maxLength={10}
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={handlePhoneChange}
                 />
+                {formErrors.phone && (
+                  <small style={{ color: '#DC2626' }}>{formErrors.phone}</small>
+                )}
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label>Hire Date</label>
@@ -276,6 +299,7 @@ const StaffManagement = () => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingStaff(null);
+                    setFormErrors({});
                     setFormData({ name: '', position: '', email: '', phone: '', hireDate: '', salary: 0, shift: '', isActive: true });
                   }}
                 >

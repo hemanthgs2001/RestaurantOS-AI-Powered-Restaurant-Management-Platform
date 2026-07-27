@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
 // Rotating background images — swap these for your own restaurant/food assets
@@ -19,6 +20,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeSlide, setActiveSlide] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -260,20 +262,46 @@ const Login = () => {
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#F2FCFA', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
                 Password
               </label>
-              <input
-                type="password"
-                className="input themed-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                autoComplete="current-password"
-                style={{
-                  background: '#F2FCFA',
-                  border: '1px solid rgba(47, 67, 72, 0.25)',
-                  color: '#2F4348',
-                }}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="input themed-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  autoComplete="current-password"
+                  style={{
+                    background: '#F2FCFA',
+                    border: '1px solid rgba(47, 67, 72, 0.25)',
+                    color: '#2F4348',
+                    paddingRight: '2.4rem',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  style={{
+                    position: 'absolute',
+                    right: '0.6rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    margin: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    color: '#6B7F80',
+                  }}
+                >
+                  {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                </button>
+              </div>
             </div>
 
             <button
