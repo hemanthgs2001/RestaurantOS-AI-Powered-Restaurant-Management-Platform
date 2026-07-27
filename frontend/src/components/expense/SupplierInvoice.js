@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { getSupplierInvoices, createSupplierInvoice, updateSupplierInvoice, deleteSupplierInvoice, updateInvoiceStatus } from '../../api/expenseApi';
 import { getSuppliers } from '../../api/restaurantApi';
 import toast from 'react-hot-toast';
@@ -139,13 +139,6 @@ const SupplierInvoice = () => {
                   </select>
                 </td>
                 <td>
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={() => setSelectedInvoice(invoice)}
-                    style={{ marginRight: '0.5rem' }}
-                  >
-                    <FiEye />
-                  </button>
                   <button
                     className="btn btn-sm btn-secondary"
                     onClick={() => {
