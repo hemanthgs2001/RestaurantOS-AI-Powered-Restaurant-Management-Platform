@@ -1,23 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 import { getMenuItems, createMenuItem, updateMenuItem, deleteMenuItem, toggleMenuItemAvailability } from '../../api/restaurantApi';
+import { getCategories } from '../../api/inventoryApi';
 import toast from 'react-hot-toast';
-
-// Fixed list of menu categories shown in the dropdown
-const MENU_CATEGORIES = [
-  'Main Menu',
-  'Starters',
-  'Desserts',
-  'Snacks',
-  'Beverages',
-  'Salads',
-  'Soups',
-  'Breads',
-  'Combos'
-];
 
 const MenuManagement = () => {
   const [menuItems, setMenuItems] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -25,23 +14,27 @@ const MenuManagement = () => {
     name: '',
     description: '',
     price: 0,
-    category: MENU_CATEGORIES[0],
+    category: '',
     isAvailable: true,
     preparationTime: 15,
     calories: 0
   });
 
   useEffect(() => {
-    fetchMenuItems();
+    fetchData();
   }, []);
 
-  const fetchMenuItems = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await getMenuItems();
-      setMenuItems(response.data);
+      const [menuRes, categoriesRes] = await Promise.all([
+        getMenuItems(),
+        getCategories()
+      ]);
+      setMenuItems(menuRes.data);
+      setCategories(categoriesRes.data);
     } catch (error) {
-      toast.error('Failed to fetch menu items');
+      toast.error('Failed to fetch data');
     } finally {
       setLoading(false);
     }
@@ -59,8 +52,8 @@ const MenuManagement = () => {
       }
       setShowModal(false);
       setEditingItem(null);
-      setFormData({ name: '', description: '', price: 0, category: MENU_CATEGORIES[0], isAvailable: true, preparationTime: 15, calories: 0 });
-      fetchMenuItems();
+      setFormData({ name: '', description: '', price: 0, category: '', isAvailable: true, preparationTime: 15, calories: 0 });
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Operation failed');
     }
@@ -71,7 +64,7 @@ const MenuManagement = () => {
       try {
         await deleteMenuItem(id);
         toast.success('Menu item deleted successfully');
-        fetchMenuItems();
+        fetchData();
       } catch (error) {
         toast.error('Failed to delete menu item');
       }
@@ -82,7 +75,7 @@ const MenuManagement = () => {
     try {
       await toggleMenuItemAvailability(id, { isAvailable: !currentStatus });
       toast.success('Availability toggled');
-      fetchMenuItems();
+      fetchData();
     } catch (error) {
       toast.error('Failed to toggle availability');
     }
@@ -122,7 +115,7 @@ const MenuManagement = () => {
             {menuItems.map((item) => (
               <tr key={item.id}>
                 <td><strong>{item.name}</strong></td>
-                <td>{item.category || 'Main Menu'}</td>
+                <td>{item.category || 'Uncategorized'}</td>
                 <td>₹{formatPrice(item.price)}</td>
                 <td>{item.preparationTime} min</td>
                 <td>{item.calories || '-'}</td>
@@ -222,8 +215,9 @@ const MenuManagement = () => {
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   required
                 >
-                  {MENU_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
               </div>
@@ -265,7 +259,7 @@ const MenuManagement = () => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingItem(null);
-                    setFormData({ name: '', description: '', price: 0, category: MENU_CATEGORIES[0], isAvailable: true, preparationTime: 15, calories: 0 });
+                    setFormData({ name: '', description: '', price: 0, category: '', isAvailable: true, preparationTime: 15, calories: 0 });
                   }}
                 >
                   Cancel

@@ -34,7 +34,7 @@ const releaseExpiredTables = async (req) => {
     for (const table of expiredTables) {
       await table.update({ status: 'available', bookedAt: null, outTime: null });
       if (io) {
-        notificationService.emitNotification(
+        await notificationService.emitNotification(
           io,
           'table_status',
           'Table available',
@@ -137,7 +137,7 @@ const createTable = async (req, res) => {
 
     const io = req.app.get('io');
     if (io && tableStatus === 'reserved') {
-      notificationService.emitNotification(
+      await notificationService.emitNotification(
         io,
         'table_status',
         'Table reserved',
@@ -268,7 +268,7 @@ const updateTableStatus = async (req, res) => {
       const message = status === 'reserved'
         ? `Table ${table.tableNumber} is reserved from ${updateData.bookedAt.toLocaleString()} to ${updateData.outTime.toLocaleString()}.`
         : `Table ${table.tableNumber} is now ${status}.`;
-      notificationService.emitNotification(
+      await notificationService.emitNotification(
         io,
         'table_status',
         title,

@@ -53,6 +53,15 @@ const StockInOut = () => {
     }
   };
 
+  // Sequelize returns DECIMAL columns (unitPrice, quantity, etc.) as strings,
+  // not numbers, so calling .toFixed() directly on them can throw and crash
+  // the page. This safely coerces to a number first.
+  const formatAmount = (amt) => {
+    const n = typeof amt === 'number' ? amt : parseFloat(amt);
+    if (Number.isNaN(n) || n === null || n === undefined) return '0.00';
+    return n.toFixed(2);
+  };
+
   if (loading) return <div className="flex-center" style={{ height: '400px' }}>Loading...</div>;
 
   return (
@@ -94,10 +103,10 @@ const StockInOut = () => {
                   <td>{item.name}</td>
                   <td>{item.unit}</td>
                   <td>{item.quantity}</td>
-                  <td>${item.unitPrice?.toFixed(2)}</td>
+                  <td>${formatAmount(item.unitPrice)}</td>
                   <td>
-                    <span className={`badge ${item.quantity <= item.reorderLevel ? 'badge-danger' : 'badge-success'}`}>
-                      {item.quantity <= item.reorderLevel ? 'Low Stock' : 'In Stock'}
+                    <span className={`badge ${parseFloat(item.quantity) <= parseFloat(item.reorderLevel) ? 'badge-danger' : 'badge-success'}`}>
+                      {parseFloat(item.quantity) <= parseFloat(item.reorderLevel) ? 'Low Stock' : 'In Stock'}
                     </span>
                   </td>
                 </tr>
@@ -131,8 +140,8 @@ const StockInOut = () => {
                   </td>
                   <td>{trans.productName}</td>
                   <td>{trans.quantity}</td>
-                  <td>${trans.unitPrice?.toFixed(2)}</td>
-                  <td>${(trans.quantity * trans.unitPrice)?.toFixed(2)}</td>
+                  <td>${formatAmount(trans.unitPrice)}</td>
+                  <td>${formatAmount(parseFloat(trans.quantity) * parseFloat(trans.unitPrice))}</td>
                   <td>{new Date(trans.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}

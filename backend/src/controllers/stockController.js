@@ -8,8 +8,13 @@ const notificationService = require('../services/notificationService');
 // @access  Private
 const getAllStock = async (req, res) => {
   try {
+    // Previously this used an explicit attributes whitelist
+    // (id, name, unit, quantity, reorderLevel, unitPrice, costPrice).
+    // If any one of those columns doesn't actually exist on the Product
+    // model/table, Sequelize throws and this endpoint returns a 500.
+    // Fetching without a whitelist avoids that failure mode entirely -
+    // it will always return whatever columns the model actually has.
     const products = await Product.findAll({
-      attributes: ['id', 'name', 'unit', 'quantity', 'reorderLevel', 'unitPrice', 'costPrice'],
       order: [['name', 'ASC']]
     });
     res.status(200).json(products);

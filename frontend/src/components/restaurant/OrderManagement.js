@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiEye } from 'react-icons/fi';
 import { getOrders, createOrder, updateOrder, deleteOrder, updateOrderStatus, getTables, getMenuItems } from '../../api/restaurantApi';
+import socket from '../../utils/socket';
 import toast from 'react-hot-toast';
 
 // Keep in sync with the sections used in Table Management.
@@ -40,6 +41,27 @@ const OrderManagement = () => {
     fetchOrders();
     fetchTables();
     fetchMenuItems();
+  }, []);
+
+  // Live updates: whenever the server emits a notification for an order
+  // being placed/status-changed, or a table's availability changing,
+  // silently re-fetch the relevant list so this page reflects it
+  // immediately - no manual refresh needed. This reuses the same
+  // notification socket events that already drive the bell icon in Header.
+  useEffect(() => {
+    const handleNotification = (notification) => {
+      if (notification.type === 'order_received' || notification.type === 'order_status') {
+        fetchOrders();
+      }
+      if (notification.type === 'table_status') {
+        fetchTables();
+      }
+    };
+
+    socket.on('notification:new', handleNotification);
+    return () => {
+      socket.off('notification:new', handleNotification);
+    };
   }, []);
 
   const fetchOrders = async () => {

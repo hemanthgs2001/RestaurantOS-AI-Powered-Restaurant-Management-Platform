@@ -11,24 +11,25 @@ const Product = sequelize.define('Product', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  description: {
-    type: DataTypes.TEXT,
-  },
-  
   unit: {
     type: DataTypes.STRING,
-    allowNull: false,
   },
   quantity: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
   },
-  
+  reorderLevel: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 10,
+  },
   unitPrice: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
   },
-  
+  costPrice: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+  },
 }, {
   timestamps: true,
 });

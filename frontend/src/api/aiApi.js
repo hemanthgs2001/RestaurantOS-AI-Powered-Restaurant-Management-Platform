@@ -40,6 +40,10 @@ export const getInvoices = () => {
   return aiAxios.get('/ai/invoices');
 };
 
+export const deleteInvoice = (id) => {
+  return aiAxios.delete(`/ai/invoices/${id}`);
+};
+
 export const generateExpenseRegister = (invoices) => {
   return aiAxios.post('/ai/invoices/export', { invoices }, {
     responseType: 'blob',

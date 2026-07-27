@@ -78,7 +78,7 @@ const createOrder = async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       const tableInfo = order.tableNumber ? ` (Table ${order.tableNumber})` : '';
-      notificationService.emitNotification(
+      await notificationService.emitNotification(
         io,
         'order_received',
         'New order received',
@@ -160,7 +160,7 @@ const updateOrderStatus = async (req, res) => {
     if (io && previousStatus !== status) {
       const title = status === 'accepted' ? 'Order accepted' : 'Order cancelled';
       const message = `Order #${order.orderNumber} status changed to ${status}.`;
-      notificationService.emitNotification(
+      await notificationService.emitNotification(
         io,
         'order_status',
         title,

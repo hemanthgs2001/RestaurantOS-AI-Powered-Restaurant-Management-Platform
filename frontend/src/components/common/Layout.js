@@ -7,7 +7,7 @@ const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F9FAFB' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#F2FCFA' }}>
       <Sidebar open={sidebarOpen} />
       <div style={{ 
         flex: 1, 
@@ -21,7 +21,7 @@ const Layout = () => {
         <main style={{ 
           padding: '2rem',
           flex: 1,
-          background: '#F9FAFB',
+          background: '#F2FCFA',
           minHeight: 'calc(100vh - 70px)'
         }}>
           <Outlet />
