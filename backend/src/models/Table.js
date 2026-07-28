@@ -18,7 +18,7 @@ const Table = sequelize.define('Table', {
     defaultValue: 4,
   },
   status: {
-    type: DataTypes.ENUM('available', 'reserved', 'maintenance'),
+    type: DataTypes.ENUM('occupied','available', 'reserved', 'maintenance'),
     defaultValue: 'available',
   },
   section: {
