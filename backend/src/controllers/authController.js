@@ -13,6 +13,12 @@ const generateToken = (id) => {
 // ---- Mail transporter ----
 // Configure these in your .env file (same vars used elsewhere, e.g. staffController.js):
 //   EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_FROM, EMAIL_SECURE (optional, 'true'/'false')
+//
+// NOTE: connectionTimeout/greetingTimeout/socketTimeout are explicitly set
+// to 10s. Nodemailer's default connectionTimeout is 2 minutes — if SMTP is
+// slow or unreachable, that 2-minute default is what previously made
+// registration feel "stuck". Capping it here means a broken SMTP
+// connection fails fast in the logs instead of hanging.
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 587,
@@ -21,6 +27,9 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 // Sends a welcome email to a newly registered user, including their
@@ -47,7 +56,7 @@ const sendUserWelcomeEmail = async (user, plainPassword) => {
       `
     });
   } catch (error) {
-    console.error('Failed to send user welcome email:', error);
+    console.error('Failed to send user welcome email:', error.message);
   }
 };
 
@@ -91,12 +100,11 @@ const register = async (req, res) => {
       role: role || 'waiter',
     });
 
-    // Fire off the welcome email with the plaintext password (non-blocking failure)
-    await sendUserWelcomeEmail(user, password);
-
+    // Respond immediately — registration is complete at this point and the
+    // client should not wait on anything else (especially not SMTP).
     res.status(201).json({
       success: true,
-      message: 'Registration successful. A welcome email has been sent.',
+      message: 'Registration successful. A welcome email will be sent shortly.',
       data: {
         id: user.id,
         name: user.name,

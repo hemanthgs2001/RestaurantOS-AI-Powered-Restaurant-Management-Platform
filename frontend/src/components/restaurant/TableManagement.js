@@ -17,7 +17,7 @@ const DEFAULT_BOOKING_DURATION_HOURS = 12;
 // Statuses a table can hold. "Occupied" has been removed - a table is
 // either open for walk-ins (available), booked for a time window
 // (reserved), or taken out of service (maintenance).
-const STATUS_OPTIONS = ['available', 'reserved', 'maintenance'];
+const STATUS_OPTIONS = ['available', 'reserved', 'maintenance','occupied'];
 
 // How often to re-fetch tables so reservations that have passed their
 // out-time automatically flip back to "available" in the UI (the backend
@@ -204,6 +204,7 @@ const TableManagement = () => {
   const getStatusBadge = (status) => {
     const badges = {
       available: 'badge-success',
+      occupied: 'badge-danger',
       reserved: 'badge-warning',
       maintenance: 'badge-info'
     };
