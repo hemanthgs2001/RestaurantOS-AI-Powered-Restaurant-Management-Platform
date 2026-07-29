@@ -106,7 +106,8 @@ function sleep(ms) {
 
 // Pulls a suggested wait time out of Gemini's 429 body if present
 // (RetryInfo.retryDelay, e.g. "23s"), otherwise falls back to exponential
-// backoff with jitter.
+// backoff with jitter. 503 responses don't typically include RetryInfo,
+// so they'll fall straight through to the backoff branch below.
 function getRetryDelayMs(errBodyText, attempt) {
   try {
     const parsed = JSON.parse(errBodyText);
@@ -156,9 +157,16 @@ async function callGemini(mediaType, base64) {
 
     const errBody = await response.text().catch(() => '');
 
-    if (response.status === 429 && attempt < MAX_RETRIES) {
+    // 429 = rate limited, 503 = model temporarily overloaded (Gemini's
+    // "high demand" UNAVAILABLE response). Both are transient and worth
+    // retrying with backoff; anything else (400, 401, 403, etc.) is a
+    // real error and should fail immediately instead of wasting retries.
+    const isRetryable = response.status === 429 || response.status === 503;
+
+    if (isRetryable && attempt < MAX_RETRIES) {
       const delay = getRetryDelayMs(errBody, attempt);
-      console.warn(`Gemini rate limited (attempt ${attempt + 1}/${MAX_RETRIES}), retrying in ${delay}ms`);
+      const reason = response.status === 429 ? 'rate limited' : 'overloaded (503)';
+      console.warn(`Gemini ${reason} (attempt ${attempt + 1}/${MAX_RETRIES}), retrying in ${delay}ms`);
       await sleep(delay);
       continue;
     }
